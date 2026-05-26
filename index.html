@@ -32,14 +32,19 @@ h1{
     margin-bottom:20px;
 }
 
-input,select,button{
+input,textarea,button{
     padding:10px;
     border-radius:8px;
     border:1px solid #ccc;
 }
 
-input,select{
+input,textarea{
     flex:1;
+}
+
+textarea{
+    resize:vertical;
+    min-height:100px;
 }
 
 button{
@@ -83,13 +88,9 @@ button:hover{
 id="student" 
 placeholder="陪誰的課">
 
-<select id="status">
-<option>😊 很順利</option>
-<option>🙂 普通</option>
-<option>😓 有點累</option>
-<option>🔥 超忙</option>
-<option>😵 狀況很多</option>
-</select>
+<textarea 
+id="status"
+placeholder="輸入今天陪課狀況（可多行）"></textarea>
 
 <button onclick="addRecord()">
 新增紀錄
@@ -103,25 +104,23 @@ placeholder="陪誰的課">
 
 <script>
 
-let records=
-JSON.parse(
-localStorage.getItem("records")
-)||[];
+let records =
+JSON.parse(localStorage.getItem("records")) || [];
 
 showRecords();
 
 function addRecord(){
 
-let date=
+let date =
 document.getElementById("date").value;
 
-let student=
+let student =
 document.getElementById("student").value;
 
-let status=
+let status =
 document.getElementById("status").value;
 
-if(!date||!student){
+if(!date || !student){
     alert("請填完整");
     return;
 }
@@ -134,38 +133,29 @@ records.push({
 
 save();
 
-document.getElementById("student").value="";
+document.getElementById("student").value = "";
+document.getElementById("status").value = "";
+
 }
 
 function save(){
-
-localStorage.setItem(
-"records",
-JSON.stringify(records)
-);
-
-showRecords();
-
+    localStorage.setItem("records", JSON.stringify(records));
+    showRecords();
 }
 
 function deleteRecord(index){
-
-records.splice(index,1);
-
-save();
-
+    records.splice(index,1);
+    save();
 }
 
 function showRecords(){
 
-let area=
-document.getElementById("records");
-
-area.innerHTML="";
+let area = document.getElementById("records");
+area.innerHTML = "";
 
 records.forEach((r,index)=>{
 
-area.innerHTML+=`
+area.innerHTML += `
 
 <div class="card">
 
@@ -173,11 +163,10 @@ area.innerHTML+=`
 
 <p>📅 日期: ${r.date}</p>
 
-<p>📝 狀態: ${r.status}</p>
+<p>📝 狀態:</p>
+<pre>${r.status}</pre>
 
-<button 
-class="delete"
-onclick="deleteRecord(${index})">
+<button class="delete" onclick="deleteRecord(${index})">
 刪除
 </button>
 
