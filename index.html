@@ -59,11 +59,6 @@ button:hover{opacity:.85;}
     border-left:5px solid #4a90e2;
 }
 
-.delete{
-    background:red;
-    margin-top:10px;
-}
-
 .sync-status{
     font-size:13px;
     margin-top:6px;
@@ -114,7 +109,7 @@ button:hover{opacity:.85;}
 </div>
 
 <script>
-				
+
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzoDlOApq17wk0-8VvOWHRRK4r3Wmrf_5lRIsprskGSRJM8N1cez24PXHCX7r6xgYHo/exec';
 
 let records = [];
@@ -185,28 +180,17 @@ function resetFilter(){
     render();
 }
 
-// ===== 刪除 =====
-function deleteRecord(index){
-    const realIndex = records.indexOf(filteredRecords[index]);
-    records.splice(realIndex, 1);
-
-    filteredRecords.splice(index, 1);
-
-    render();
-}
-
 // ===== 畫面 =====
 function render(){
     const area = document.getElementById("records");
     area.innerHTML = "";
 
-    filteredRecords.forEach((r, i) => {
+    filteredRecords.forEach((r) => {
         area.innerHTML += `
         <div class="card">
             <h3>${r.student}</h3>
             <p>📅 ${r.date}</p>
             <pre>${r.status}</pre>
-            <button class="delete" onclick="deleteRecord(${i})">刪除</button>
         </div>`;
     });
 }
