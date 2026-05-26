@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陪課紀錄</title>
+<style>
+body{
+    font-family: Arial,sans-serif;
+    background:#f3f6fa;
+    padding:30px;
+}
+.container{
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,.1);
+}
+h1{
+    text-align:center;
+}
+.input-group{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+input,textarea,button{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+input,textarea{
+    flex:1;
+}
+textarea{
+    resize:vertical;
+    min-height:100px;
+}
+button{
+    background:#4a90e2;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+button:hover{
+    opacity:.8;
+}
+.card{
+    background:#f8f9ff;
+    padding:15px;
+    margin-top:15px;
+    border-radius:10px;
+    border-left:5px solid #4a90e2;
+}
+.delete{
+    background:red;
+    margin-top:10px;
+}
+.sync-status{
+    font-size:13px;
+    margin-top:6px;
+    padding:6px 12px;
+    border-radius:6px;
+    display:inline-block;
+}
+.sync-ok{ background:#d4edda; color:#276c3a; }
+.sync-fail{ background:#fde8e8; color:#9a2c2c; }
+.sync-ing{ background:#fff3cd; color:#856404; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📚 陪課紀錄系統</h1>
+
+<div class="input-group">
+    <input type="date" id="date">
+    <input type="text" id="student" placeholder="陪誰的課">
+    <textarea id="status" placeholder="輸入今天陪課狀況（可多行）"></textarea>
+    <button onclick="addRecord()">新增紀錄</button>
+</div>
+
+<div id="syncMsg"></div>
+<div id="records"></div>
+</div>
+
+<script>
+// =============================================
+// ★ 把你的 Google Apps Script 網址貼在這裡 ★
+// =============================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzjXOV5nFeX66lbT5RlMBdXItGQfb931wz02IvGpXzEP91NKUlF3bPkpBjF4FiqIeJf/exec';
+// =============================================
+
+let records = JSON.parse(localStorage.getItem("records")) || [];
+showRecords();
+
+// ---------- 新增記錄 ----------
+async function addRecord() {
+    const date    = document.getElementById("date").value;
+    const student = document.getElementById("student").value.trim();
+    const status  = document.getElementById("status").value.trim();
+
+    if (!date || !student) {
+        alert("請填完整");
+        return;
+    }
+
+    const newRecord = { date, student, status };
+    records.push(newRecord);
+    save();
+
+    document.getElementById("student").value = "";
+    document.getElementById("status").value  = "";
+
+    // 同步到 Google Sheets
+    await syncToSheets(newRecord);
+}
+
+// ---------- 存 localStorage + 重繪 ----------
+function save() {
+    localStorage.setItem("records", JSON.stringify(records));
+    showRecords();
+}
+
+// ---------- 刪除 ----------
+function deleteRecord(index) {
+    records.splice(index, 1);
+    save();
+}
+
+// ---------- 顯示卡片 ----------
+function showRecords() {
+    const area = document.getElementById("records");
+    area.innerHTML = "";
+    records.forEach((r, index) => {
+        area.innerHTML += `
+        <div class="card">
+            <h3>${r.student}</h3>
+            <p>📅 日期: ${r.date}</p>
+            <p>📝 狀態:</p>
+            <pre>${r.status}</pre>
+            <button class="delete" onclick="deleteRecord(${index})">刪除</button>
+        </div>`;
+    });
+}
+
+// ---------- 同步一筆到 Google Sheets ----------
+async function syncToSheets(record) {
+    if (GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') {
+        showSyncMsg('⚠ 尚未設定 GAS_URL，資料只存在本機', 'fail');
+        return;
+    }
+
+    showSyncMsg('⏳ 同步中…', 'ing');
+    try {
+        await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+        });
+        showSyncMsg('✅ 已同步到 Google Sheets', 'ok');
+    } catch (err) {
+        showSyncMsg('❌ 同步失敗，資料仍保存在本機', 'fail');
+    }
+}
+
+// ---------- 顯示同步狀態 ----------
+function showSyncMsg(msg, type) {
+    const el = document.getElementById('syncMsg');
+    el.innerHTML = `<span class="sync-status sync-${type}">${msg}</span>`;
+    if (type === 'ok') setTimeout(() => el.innerHTML = '', 3000);
+}
+</script>
+</body>
+</html>
