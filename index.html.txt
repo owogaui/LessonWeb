@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陪課紀錄</title>
+
+<style>
+body{
+    font-family: Arial,sans-serif;
+    background:#f3f6fa;
+    padding:30px;
+}
+
+.container{
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,.1);
+}
+
+h1{
+    text-align:center;
+}
+
+.input-group{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+input,select,button{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+input,select{
+    flex:1;
+}
+
+button{
+    background:#4a90e2;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.8;
+}
+
+.card{
+    background:#f8f9ff;
+    padding:15px;
+    margin-top:15px;
+    border-radius:10px;
+    border-left:5px solid #4a90e2;
+}
+
+.delete{
+    background:red;
+    margin-top:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📚 陪課紀錄系統</h1>
+
+<div class="input-group">
+
+<input type="date" id="date">
+
+<input type="text" 
+id="student" 
+placeholder="陪誰的課">
+
+<select id="status">
+<option>😊 很順利</option>
+<option>🙂 普通</option>
+<option>😓 有點累</option>
+<option>🔥 超忙</option>
+<option>😵 狀況很多</option>
+</select>
+
+<button onclick="addRecord()">
+新增紀錄
+</button>
+
+</div>
+
+<div id="records"></div>
+
+</div>
+
+<script>
+
+let records=
+JSON.parse(
+localStorage.getItem("records")
+)||[];
+
+showRecords();
+
+function addRecord(){
+
+let date=
+document.getElementById("date").value;
+
+let student=
+document.getElementById("student").value;
+
+let status=
+document.getElementById("status").value;
+
+if(!date||!student){
+    alert("請填完整");
+    return;
+}
+
+records.push({
+    date,
+    student,
+    status
+});
+
+save();
+
+document.getElementById("student").value="";
+}
+
+function save(){
+
+localStorage.setItem(
+"records",
+JSON.stringify(records)
+);
+
+showRecords();
+
+}
+
+function deleteRecord(index){
+
+records.splice(index,1);
+
+save();
+
+}
+
+function showRecords(){
+
+let area=
+document.getElementById("records");
+
+area.innerHTML="";
+
+records.forEach((r,index)=>{
+
+area.innerHTML+=`
+
+<div class="card">
+
+<h3>${r.student}</h3>
+
+<p>📅 日期: ${r.date}</p>
+
+<p>📝 狀態: ${r.status}</p>
+
+<button 
+class="delete"
+onclick="deleteRecord(${index})">
+刪除
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
