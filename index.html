@@ -266,11 +266,11 @@ pre{
 
     <input type="date" id="filterDate">
 
-    <select id="filterTeacher">
+    <select id="filterTeacher" onchange="handlePersonFilterChange('teacher')">
         <option value="">全部陪課員</option>
     </select>
 
-    <select id="filterStudent">
+    <select id="filterStudent" onchange="handlePersonFilterChange('student')">
         <option value="">全部被陪課成員</option>
     </select>
 
@@ -285,7 +285,7 @@ pre{
 
 <script>
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbws0OC2ivLQJli-hAYc8JA5N2dA6Ts4SGLKNZaCLRVR3D_BDa_dUGaeUhipevUf9gdH/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzVUwBCiDgyZg5mm8fEbAW76oLeHeZMz6MJUUuxStDz4r3P-_5uR56_ROTPNmzKgIgT/exec';
 
 let records = [];
 let filteredRecords = [];
@@ -307,7 +307,7 @@ function setNowClassTime(){
 
 async function loadFromSheets(){
     try{
-        const res = await fetch(GAS_URL);
+        const res = await fetch(GAS_URL + "?t=" + Date.now());
         const data = await res.json();
 
         records = Array.isArray(data) ? data : [];
@@ -317,6 +317,29 @@ async function loadFromSheets(){
         renderDetail();
     } catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
+    }
+}
+
+function handlePersonFilterChange(type){
+    const teacherSelect = document.getElementById("filterTeacher");
+    const studentSelect = document.getElementById("filterStudent");
+
+    if(type === "teacher" && teacherSelect.value){
+        studentSelect.value = "";
+        studentSelect.disabled = true;
+    }
+
+    if(type === "teacher" && !teacherSelect.value){
+        studentSelect.disabled = false;
+    }
+
+    if(type === "student" && studentSelect.value){
+        teacherSelect.value = "";
+        teacherSelect.disabled = true;
+    }
+
+    if(type === "student" && !studentSelect.value){
+        teacherSelect.disabled = false;
     }
 }
 
@@ -376,13 +399,8 @@ async function addRecord(){
         status
     };
 
-    records.push(newRecord);
-    filteredRecords = records;
-
-    updateSelectOptions();
-    renderDetail();
-
     await syncToSheets(newRecord);
+    await loadFromSheets();
 
     document.getElementById("student").value = "";
     document.getElementById("status").value = "";
@@ -398,7 +416,7 @@ function applyFilter(){
     if(mode === "count" && !teacher && !student){
         document.getElementById("records").innerHTML = `
             <div class="warn-msg">
-                ⚠️ 請先選擇「陪課員」或「被陪課成員」，再查看陪課次數表。
+                ⚠️ 請先選擇一位「陪課員」或一位「被陪課成員」，再查看陪課次數表。
             </div>
         `;
         return;
@@ -421,6 +439,8 @@ function resetFilter(){
     document.getElementById("filterDate").value = "";
     document.getElementById("filterTeacher").value = "";
     document.getElementById("filterStudent").value = "";
+    document.getElementById("filterTeacher").disabled = false;
+    document.getElementById("filterStudent").disabled = false;
     document.getElementById("viewMode").value = "detail";
 
     filteredRecords = records;
@@ -466,6 +486,9 @@ function updateSelectOptions(){
         addOptionIfNotExists(filterStudent, currentFilterStudent, currentFilterStudent);
         filterStudent.value = currentFilterStudent;
     }
+
+    handlePersonFilterChange("teacher");
+    handlePersonFilterChange("student");
 }
 
 function addOptionIfNotExists(select, value, text){
@@ -534,8 +557,10 @@ function renderCountChart(){
     dates.forEach(date => countMap[date] = 0);
 
     filteredRecords.forEach(r => {
-        if(countMap[r.date] !== undefined){
-            countMap[r.date]++;
+        const recordDate = normalizeDate(r.date || r.classTime);
+
+        if(countMap[recordDate] !== undefined){
+            countMap[recordDate]++;
         }
     });
 
@@ -566,6 +591,29 @@ function renderCountChart(){
     `;
 
     area.innerHTML = html;
+}
+
+function normalizeDate(value){
+    if(!value) return "";
+
+    if(value instanceof Date){
+        const yyyy = value.getFullYear();
+        const mm = String(value.getMonth() + 1).padStart(2, "0");
+        const dd = String(value.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const str = String(value);
+
+    if(str.includes("T")){
+        return str.slice(0, 10);
+    }
+
+    if(str.includes("-")){
+        return str.slice(0, 10);
+    }
+
+    return str;
 }
 
 async function syncToSheets(record){
