@@ -101,7 +101,8 @@ pre{
 #addTeacherBox{
     width:100%;
     display:none;
-    gap:10px;
+    gap:8px;
+    margin-top:5px;
 }
 
 #addTeacherBox input{
@@ -109,6 +110,7 @@ pre{
 }
 
 @media(max-width:600px){
+
     body{
         padding:12px;
     }
@@ -122,7 +124,9 @@ pre{
         gap:8px;
     }
 
-    input,select,button{
+    input,
+    select,
+    button{
         width:100%;
         flex:auto;
     }
@@ -137,6 +141,29 @@ pre{
         height:32px;
         padding:5px 8px;
     }
+
+    /* 手機版新增陪課員 */
+
+    #addTeacherBox{
+        flex-direction:column;
+        width:100%;
+    }
+
+    #addTeacherBox input{
+        width:100%;
+        flex:none;
+    }
+
+    #addTeacherBox button{
+        width:100%;
+        flex:none;
+    }
+
+    #newTeacherName{
+        font-size:16px;
+        padding:12px;
+    }
+}
 }
 </style>
 </head>
