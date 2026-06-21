@@ -109,8 +109,61 @@ pre{
     flex:1;
 }
 
-@media(max-width:600px){
+/* 陪課次數表 */
+.chart-box{
+    margin-top:20px;
+    background:#f8f9ff;
+    padding:15px;
+    border-radius:10px;
+    overflow-x:auto;
+}
 
+.chart-title{
+    margin-bottom:10px;
+    color:#333;
+}
+
+.chart{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    height:260px;
+    border-left:2px solid #555;
+    border-bottom:2px solid #555;
+    padding:10px;
+    min-width:900px;
+}
+
+.bar-wrap{
+    text-align:center;
+    font-size:12px;
+    color:#555;
+}
+
+.bar{
+    width:24px;
+    background:#4a90e2;
+    border-radius:5px 5px 0 0;
+    margin:auto;
+}
+
+.bar-count{
+    font-size:12px;
+    margin-bottom:4px;
+}
+
+.bar-date{
+    writing-mode:vertical-rl;
+    margin-top:6px;
+}
+
+.empty-msg{
+    text-align:center;
+    color:#777;
+    padding:30px 0;
+}
+
+@media(max-width:600px){
     body{
         padding:12px;
     }
@@ -142,8 +195,6 @@ pre{
         padding:5px 8px;
     }
 
-    /* 手機版新增陪課員 */
-
     #addTeacherBox{
         flex-direction:column;
         width:100%;
@@ -163,7 +214,15 @@ pre{
         font-size:16px;
         padding:12px;
     }
-}
+
+    .chart{
+        height:240px;
+        min-width:850px;
+    }
+
+    .bar{
+        width:22px;
+    }
 }
 </style>
 </head>
@@ -203,6 +262,11 @@ pre{
     <div style="width:100%; color:#666; font-size:14px; margin-bottom:5px;">
         🔎 下面是先前紀錄，可以使用搜尋工具輔助尋找
     </div>
+
+    <select id="viewMode" onchange="applyFilter()">
+        <option value="detail">心得詳情</option>
+        <option value="count">陪課次數表</option>
+    </select>
 
     <input type="date" id="filterDate">
 
@@ -347,6 +411,7 @@ function resetFilter(){
     document.getElementById("filterDate").value = "";
     document.getElementById("filterTeacher").value = "";
     document.getElementById("filterStudent").value = "";
+    document.getElementById("viewMode").value = "detail";
 
     filteredRecords = records;
     render();
@@ -408,7 +473,19 @@ function formatClassTime(value){
 
 function render(){
     const area = document.getElementById("records");
+    const mode = document.getElementById("viewMode")?.value || "detail";
+
     area.innerHTML = "";
+
+    if(mode === "count"){
+        renderCountChart();
+        return;
+    }
+
+    if(filteredRecords.length === 0){
+        area.innerHTML = `<div class="empty-msg">目前沒有符合條件的紀錄</div>`;
+        return;
+    }
 
     filteredRecords.forEach((r) => {
         area.innerHTML += `
@@ -419,6 +496,64 @@ function render(){
             <pre>${escapeHTML(r.status || "")}</pre>
         </div>`;
     });
+}
+
+function renderCountChart(){
+    const area = document.getElementById("records");
+
+    const today = new Date();
+    const dates = [];
+
+    for(let i = -15; i <= 15; i++){
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+
+        dates.push(`${yyyy}-${mm}-${dd}`);
+    }
+
+    const countMap = {};
+
+    dates.forEach(date => {
+        countMap[date] = 0;
+    });
+
+    filteredRecords.forEach(r => {
+        if(countMap[r.date] !== undefined){
+            countMap[r.date]++;
+        }
+    });
+
+    const maxCount = Math.max(...Object.values(countMap), 1);
+
+    let html = `
+        <div class="chart-box">
+            <h3 class="chart-title">📊 陪課次數表：前15天 ～ 後15天</h3>
+            <div class="chart">
+    `;
+
+    dates.forEach(date => {
+        const count = countMap[date];
+        const height = count === 0 ? 4 : (count / maxCount) * 200;
+
+        html += `
+            <div class="bar-wrap">
+                <div class="bar-count">${count}</div>
+                <div class="bar" style="height:${height}px"></div>
+                <div class="bar-date">${date.slice(5)}</div>
+            </div>
+        `;
+    });
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    area.innerHTML = html;
 }
 
 async function syncToSheets(record){
