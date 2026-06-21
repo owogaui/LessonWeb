@@ -43,7 +43,7 @@ input,textarea{flex:1;}
 }
 
 #teacher{
-    flex:0.7;
+    flex:0.9;
 }
 
 textarea{
@@ -86,6 +86,11 @@ button:hover{opacity:.85;}
     background:#ddd;
     margin:25px 0;
 }
+
+pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+}
 </style>
 </head>
 
@@ -100,12 +105,10 @@ button:hover{opacity:.85;}
 
     <input type="date" id="date">
 
-    <select id="teacher">
-        <option value="">我是誰？</option>
-        <option value="家毅">家毅</option>
+    <select id="teacher" onchange="handleTeacherChange()">
+        <option value="">請輸入你的名字</option>
+        <option value="__add__">＋ 新增陪課員</option>
     </select>
-
-    <button type="button" onclick="addTeacher()">新增陪課員</button>
 
     <input type="text" id="student" placeholder="陪了誰?">
 
@@ -122,7 +125,15 @@ button:hover{opacity:.85;}
     </div>
 
     <input type="date" id="filterDate">
-    <input type="text" id="filterStudent" placeholder="篩選成員">
+
+    <select id="filterTeacher">
+        <option value="">全部陪課員</option>
+    </select>
+
+    <select id="filterStudent">
+        <option value="">全部被陪課成員</option>
+    </select>
+
     <button onclick="applyFilter()">送出篩選</button>
     <button onclick="resetFilter()">清除</button>
 </div>
@@ -148,36 +159,33 @@ async function loadFromSheets(){
         const res = await fetch(GAS_URL);
         const data = await res.json();
 
-        records = data;
-        filteredRecords = data;
+        records = Array.isArray(data) ? data : [];
+        filteredRecords = records;
 
+        updateSelectOptions();
         render();
     } catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
     }
 }
 
-function addTeacher(){
-    const name = prompt("輸入新的陪課員名稱");
-
-    if(!name || !name.trim()) return;
-
-    const cleanName = name.trim();
+function handleTeacherChange(){
     const select = document.getElementById("teacher");
 
-    const exists = [...select.options].some(option => option.value === cleanName);
+    if(select.value === "__add__"){
+        const name = prompt("請輸入新的陪課員名字");
 
-    if(exists){
+        if(!name || !name.trim()){
+            select.value = "";
+            return;
+        }
+
+        const cleanName = name.trim();
+        addOptionIfNotExists(select, cleanName, cleanName);
+
         select.value = cleanName;
-        return;
+        updateSelectOptions();
     }
-
-    const option = document.createElement("option");
-    option.value = cleanName;
-    option.textContent = cleanName;
-
-    select.appendChild(option);
-    select.value = cleanName;
 }
 
 async function addRecord(){
@@ -186,7 +194,7 @@ async function addRecord(){
     const student = document.getElementById("student").value.trim();
     const status = document.getElementById("status").value.trim();
 
-    if(!date || !teacher || !student){
+    if(!date || !teacher || teacher === "__add__" || !student){
         alert("請填日期、陪課員與陪了誰");
         return;
     }
@@ -201,6 +209,7 @@ async function addRecord(){
     records.push(newRecord);
     filteredRecords = records;
 
+    updateSelectOptions();
     render();
 
     await syncToSheets(newRecord);
@@ -211,11 +220,13 @@ async function addRecord(){
 
 function applyFilter(){
     const d = document.getElementById("filterDate").value;
-    const s = document.getElementById("filterStudent").value.trim();
+    const teacher = document.getElementById("filterTeacher").value;
+    const student = document.getElementById("filterStudent").value;
 
     filteredRecords = records.filter(r => {
         return (!d || r.date === d) &&
-               (!s || r.student.includes(s));
+               (!teacher || r.teacher === teacher) &&
+               (!student || r.student === student);
     });
 
     render();
@@ -223,10 +234,57 @@ function applyFilter(){
 
 function resetFilter(){
     document.getElementById("filterDate").value = "";
+    document.getElementById("filterTeacher").value = "";
     document.getElementById("filterStudent").value = "";
 
     filteredRecords = records;
     render();
+}
+
+function updateSelectOptions(){
+    const teacherSelect = document.getElementById("teacher");
+    const filterTeacher = document.getElementById("filterTeacher");
+    const filterStudent = document.getElementById("filterStudent");
+
+    const currentTeacher = teacherSelect.value;
+
+    const teachers = [...new Set(records.map(r => r.teacher).filter(Boolean))];
+    const students = [...new Set(records.map(r => r.student).filter(Boolean))];
+
+    teacherSelect.innerHTML = `
+        <option value="">請輸入你的名字</option>
+        <option value="__add__">＋ 新增陪課員</option>
+    `;
+
+    teachers.forEach(name => {
+        addOptionIfNotExists(teacherSelect, name, name);
+    });
+
+    if(currentTeacher && currentTeacher !== "__add__"){
+        addOptionIfNotExists(teacherSelect, currentTeacher, currentTeacher);
+        teacherSelect.value = currentTeacher;
+    }
+
+    filterTeacher.innerHTML = `<option value="">全部陪課員</option>`;
+    teachers.forEach(name => {
+        addOptionIfNotExists(filterTeacher, name, name);
+    });
+
+    filterStudent.innerHTML = `<option value="">全部被陪課成員</option>`;
+    students.forEach(name => {
+        addOptionIfNotExists(filterStudent, name, name);
+    });
+}
+
+function addOptionIfNotExists(select, value, text){
+    const exists = [...select.options].some(option => option.value === value);
+
+    if(!exists){
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = text;
+        select.appendChild(option);
+    }
 }
 
 function render(){
@@ -239,7 +297,7 @@ function render(){
             <h3>${r.student}</h3>
             <p>👤 陪課員：${r.teacher || "未填寫"}</p>
             <p>📅 ${r.date}</p>
-            <pre>${r.status}</pre>
+            <pre>${r.status || ""}</pre>
         </div>`;
     });
 }
