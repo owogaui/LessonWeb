@@ -707,6 +707,13 @@ function applyFilter(){
                (!student || r.student === student);
     });
 
+    // 除錯用：在瀏覽器 console 可以看到目前資料筆數與篩選結果
+    console.log("[陪課紀錄] records 總筆數:", records.length);
+    console.log("[陪課紀錄] filteredRecords 筆數:", filteredRecords.length);
+    if(records.length > 0){
+        console.log("[陪課紀錄] 第一筆原始資料樣本:", records[0]);
+    }
+
     if(mode === "count"){
         renderCountChart();
     }else{
@@ -822,6 +829,33 @@ function renderDetail(){
     });
 }
 
+// 將各種可能的日期字串／格式統一轉成 yyyy-MM-dd，避免比對失敗
+function normalizeDateStr(value){
+    if(!value) return "";
+
+    const str = String(value).trim();
+
+    // 已經是 yyyy-MM-dd 開頭，直接取前10碼
+    const isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(isoMatch){
+        const yyyy = isoMatch[1];
+        const mm = isoMatch[2].padStart(2, "0");
+        const dd = isoMatch[3].padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // 嘗試讓瀏覽器自行解析（例如 2026/6/21 或含時間的字串）
+    const parsed = new Date(str);
+    if(!isNaN(parsed.getTime())){
+        const yyyy = parsed.getFullYear();
+        const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+        const dd = String(parsed.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    return str;
+}
+
 function renderCountChart(){
     const area = document.getElementById("records");
     const countEl = document.getElementById("resultCount");
@@ -844,16 +878,38 @@ function renderCountChart(){
     const countMap = {};
     dates.forEach(date => countMap[date] = 0);
 
+    let unmatchedCount = 0;
+
     filteredRecords.forEach(r => {
-        if(countMap[r.date] !== undefined){
-            countMap[r.date]++;
+        // 優先用 date 欄位，沒有的話退而用 classTime 的前10碼當備援
+        const rawDate = r.date || r.classTime || "";
+        const normalized = normalizeDateStr(rawDate);
+
+        if(countMap[normalized] !== undefined){
+            countMap[normalized]++;
+        }else{
+            unmatchedCount++;
         }
     });
+
+    if(unmatchedCount > 0){
+        console.warn(`[陪課紀錄] 有 ${unmatchedCount} 筆資料的日期落在顯示區間外，或日期格式無法辨識`);
+    }
 
     const totalCount = Object.values(countMap).reduce((a,b) => a+b, 0);
     const maxCount = Math.max(...Object.values(countMap), 1);
 
     countEl.textContent = `區間內共 ${totalCount} 筆紀錄`;
+
+    if(totalCount === 0 && filteredRecords.length > 0){
+        area.innerHTML = `
+            <div class="warn-msg">
+                ⚠️ 篩選到 ${filteredRecords.length} 筆資料，但日期都不在「前15天～後15天」範圍內，或日期格式無法辨識。
+                請打開瀏覽器主控台（F12 → Console）查看詳細訊息。
+            </div>
+        `;
+        return;
+    }
 
     let html = `
         <div class="chart-box">
