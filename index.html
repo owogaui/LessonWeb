@@ -1,152 +1,396 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">	
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>新竹一支會陪課紀錄</title>
 
 <style>
+:root{
+    --blue:#4a6fe2;
+    --blue-dark:#3a59c4;
+    --blue-soft:#eef2ff;
+    --ink:#2b2f3a;
+    --ink-soft:#6b7280;
+    --line:#e6e8f0;
+    --bg:#eef1f8;
+    --card:#ffffff;
+    --ok-bg:#e3f6e9; --ok-fg:#1f7a43;
+    --fail-bg:#fde8e8; --fail-fg:#9a2c2c;
+    --ing-bg:#fff3cd; --ing-fg:#8a6400;
+    --radius:14px;
+}
+
+*{box-sizing:border-box;}
+
 body{
-    font-family: Arial;
-    background:#f3f6fa;
-    padding:30px;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial,sans-serif;
+    background:var(--bg);
+    margin:0;
+    padding:24px 16px 60px;
+    color:var(--ink);
 }
 
-.container{
-    max-width:900px;
+.wrap{
+    max-width:880px;
     margin:auto;
-    background:white;
-    padding:25px;
-    border-radius:15px;
-    box-shadow:0 0 15px rgba(0,0,0,.1);
 }
 
-h1{text-align:center;}
+/* ---------- Header ---------- */
+.page-head{
+    text-align:center;
+    margin-bottom:22px;
+}
 
-.input-group, .filter-group{
+.page-head .eyebrow{
+    font-size:13px;
+    letter-spacing:.08em;
+    color:var(--blue-dark);
+    font-weight:700;
+    margin-bottom:4px;
+}
+
+.page-head h1{
+    font-size:24px;
+    margin:0;
+}
+
+.page-head p{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    margin:6px 0 0;
+}
+
+/* ---------- Section card shell ---------- */
+.section{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 2px 14px rgba(40,50,90,.07);
+    padding:22px;
+    margin-bottom:20px;
+}
+
+.section-head{
     display:flex;
+    align-items:center;
     gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:15px;
+    margin-bottom:16px;
+}
+
+.section-badge{
+    width:30px;height:30px;
+    border-radius:9px;
+    background:var(--blue-soft);
+    color:var(--blue-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    flex-shrink:0;
+}
+
+.section-title{
+    font-size:16px;
+    font-weight:700;
+    margin:0;
+}
+
+.section-sub{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:2px 0 0;
+}
+
+/* ---------- Form ---------- */
+.field{
+    margin-bottom:14px;
+}
+
+.field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+}
+
+.field-row{
+    display:flex;
+    gap:12px;
+}
+
+.field-row .field{
+    flex:1;
+    min-width:0;
 }
 
 input,textarea,select,button{
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:14px;
+    font-family:inherit;
+    font-size:14.5px;
 }
 
-input,textarea{flex:1;}
+input,textarea,select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:#fbfcff;
+    color:var(--ink);
+    transition:border-color .15s, background .15s;
+}
 
-#student{flex:0.8;}
-#teacher{flex:0.9;}
+input:focus,textarea:focus,select:focus{
+    outline:none;
+    border-color:var(--blue);
+    background:#fff;
+}
 
 textarea{
-    min-height:140px;
-    width:100%;
+    min-height:110px;
     resize:vertical;
+    line-height:1.5;
 }
 
-button{
-    background:#4a90e2;
-    color:white;
+#addTeacherBox{
+    display:none;
+    gap:8px;
+    margin-top:8px;
+}
+
+#addTeacherBox input{flex:1;}
+
+#addTeacherBox button{
+    flex-shrink:0;
+    width:auto;
+    padding:0 16px;
+}
+
+.btn-primary{
+    width:100%;
+    background:var(--blue);
+    color:#fff;
     border:none;
+    border-radius:10px;
+    padding:13px;
+    font-weight:700;
     cursor:pointer;
+    transition:background .15s, transform .1s;
 }
 
-button:hover{opacity:.85;}
+.btn-primary:hover{background:var(--blue-dark);}
+.btn-primary:active{transform:scale(.99);}
 
-.card{
-    background:#f8f9ff;
-    padding:15px;
-    margin-top:15px;
+.btn-ghost{
+    background:#fff;
+    color:var(--ink-soft);
+    border:1.5px solid var(--line);
     border-radius:10px;
-    border-left:5px solid #4a90e2;
+    cursor:pointer;
+    padding:0 16px;
+}
+
+.btn-ghost:hover{
+    border-color:var(--blue);
+    color:var(--blue-dark);
 }
 
 .sync-status{
     font-size:13px;
-    margin-top:6px;
-    padding:6px 12px;
-    border-radius:6px;
-    display:inline-block;
+    margin-top:12px;
+    padding:9px 14px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
 }
 
-.sync-ok{background:#d4edda;color:#276c3a;}
-.sync-fail{background:#fde8e8;color:#9a2c2c;}
-.sync-ing{background:#fff3cd;color:#856404;}
+.sync-ok{background:var(--ok-bg);color:var(--ok-fg);}
+.sync-fail{background:var(--fail-bg);color:var(--fail-fg);}
+.sync-ing{background:var(--ing-bg);color:var(--ing-fg);}
 
-.divider{
-    height:2px;
-    background:#ddd;
-    margin:25px 0;
+/* ---------- Filter section ---------- */
+.view-toggle{
+    display:flex;
+    background:var(--blue-soft);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:14px;
 }
 
-pre{
+.view-toggle button{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:9px 0;
+    border-radius:8px;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--blue-dark);
+    cursor:pointer;
+}
+
+.view-toggle button.active{
+    background:var(--blue);
+    color:#fff;
+}
+
+.filter-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.filter-actions{
+    display:flex;
+    gap:10px;
+}
+
+.filter-actions button{
+    border-radius:10px;
+    padding:10px 18px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:13.5px;
+    border:none;
+}
+
+.filter-actions .apply{
+    background:var(--blue);
+    color:#fff;
+}
+
+.filter-actions .apply:hover{background:var(--blue-dark);}
+
+.filter-actions .reset{
+    background:#fff;
+    color:var(--ink-soft);
+    border:1.5px solid var(--line);
+}
+
+.filter-actions .reset:hover{
+    border-color:var(--blue);
+    color:var(--blue-dark);
+}
+
+.result-count{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:14px 0 10px;
+}
+
+/* ---------- Record cards ---------- */
+.card{
+    background:#fbfcff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    border-left:4px solid var(--blue);
+}
+
+.card-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+}
+
+.card-student{
+    font-size:16px;
+    font-weight:700;
+    margin:0;
+}
+
+.card-time{
+    font-size:12px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+}
+
+.card-teacher{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:12.5px;
+    color:var(--blue-dark);
+    background:var(--blue-soft);
+    padding:3px 10px;
+    border-radius:99px;
+    margin-bottom:10px;
+}
+
+.card pre{
     white-space:pre-wrap;
     word-break:break-word;
+    font-family:inherit;
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--ink);
+    margin:0;
 }
 
-.filter-group input,
-.filter-group select,
-.filter-group button{
-    padding:6px 8px;
-    height:34px;
-    font-size:13px;
+.card pre:empty::before{
+    content:"（沒有填寫心得內容）";
+    color:#aab0bd;
 }
 
-#addTeacherBox{
-    width:100%;
-    display:none;
-    gap:8px;
-    margin-top:5px;
-}
-
-#addTeacherBox input{
-    flex:1;
-}
-
+/* ---------- Chart ---------- */
 .chart-box{
-    margin-top:20px;
-    background:#f8f9ff;
-    padding:15px;
-    border-radius:10px;
+    background:#fbfcff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
     overflow-x:auto;
 }
 
 .chart-title{
-    margin-bottom:10px;
-    color:#333;
+    margin:0 0 14px;
+    font-size:14px;
+    font-weight:700;
 }
 
 .chart{
     display:flex;
     align-items:flex-end;
     gap:8px;
-    height:260px;
-    border-left:2px solid #555;
-    border-bottom:2px solid #555;
-    padding:10px;
+    height:220px;
+    border-left:2px solid var(--line);
+    border-bottom:2px solid var(--line);
+    padding:10px 10px 0;
     min-width:900px;
 }
 
 .bar-wrap{
     text-align:center;
-    font-size:12px;
-    color:#555;
+    font-size:11px;
+    color:var(--ink-soft);
+    flex:1;
+}
+
+.bar-wrap.is-today .bar{
+    background:#ff8a3d;
+}
+
+.bar-wrap.is-today .bar-date{
+    color:#ff8a3d;
+    font-weight:700;
 }
 
 .bar{
-    width:24px;
-    background:#4a90e2;
+    width:22px;
+    background:var(--blue);
     border-radius:5px 5px 0 0;
     margin:auto;
+    transition:height .25s;
 }
 
 .bar-count{
-    font-size:12px;
+    font-size:11.5px;
     margin-bottom:4px;
+    font-weight:700;
+    color:var(--ink);
 }
 
 .bar-date{
@@ -154,56 +398,58 @@ pre{
     margin-top:6px;
 }
 
+/* ---------- Empty / warn states ---------- */
 .empty-msg{
     text-align:center;
-    color:#777;
-    padding:30px 0;
+    color:var(--ink-soft);
+    padding:36px 0;
+    font-size:13.5px;
+}
+
+.empty-msg .emoji{
+    font-size:30px;
+    display:block;
+    margin-bottom:8px;
 }
 
 .warn-msg{
-    background:#fff3cd;
-    color:#856404;
-    padding:15px;
+    background:var(--ing-bg);
+    color:var(--ing-fg);
+    padding:14px 16px;
     border-radius:10px;
-    margin-top:15px;
+    font-size:13.5px;
 }
 
-@media(max-width:600px){
-    body{padding:12px;}
-    .container{padding:16px;}
+/* ---------- Mobile ---------- */
+@media(max-width:640px){
+    body{padding:16px 10px 50px;}
 
-    .input-group,
-    .filter-group{
-        gap:8px;
+    .section{padding:16px;}
+
+    .field-row{
+        flex-direction:column;
+        gap:0;
     }
 
-    input,
-    select,
-    button{
+    .filter-grid{
+        grid-template-columns:1fr;
+    }
+
+    .filter-actions{
+        flex-direction:column;
+    }
+
+    .filter-actions button{
         width:100%;
-        flex:auto;
-    }
-
-    textarea{
-        min-height:130px;
-    }
-
-    .filter-group input,
-    .filter-group select,
-    .filter-group button{
-        height:32px;
-        padding:5px 8px;
     }
 
     #addTeacherBox{
         flex-direction:column;
-        width:100%;
     }
 
     #addTeacherBox input,
     #addTeacherBox button{
         width:100%;
-        flex:none;
     }
 
     #newTeacherName{
@@ -211,84 +457,124 @@ pre{
         padding:12px;
     }
 
-    .chart{
-        height:240px;
-        min-width:850px;
+    .card-top{
+        flex-direction:column;
+        gap:2px;
     }
 
-    .bar{
-        width:22px;
+    .chart{
+        height:200px;
+        min-width:820px;
     }
 }
 </style>
 </head>
 
 <body>
-<div class="container">
-<h1>📚 陪課紀錄系統</h1>
+<div class="wrap">
 
-<div class="input-group">
-    <div style="width:100%; color:#666; font-size:14px; margin-bottom:5px;">
-        🔎 下面是陪課完之後可以來這邊新增當日狀況
-    </div>
-
-    <input type="datetime-local" id="classTime">
-
-    <select id="teacher" onchange="handleTeacherChange()">
-        <option value="">請輸入你的名字</option>
-        <option value="__add__">＋ 新增陪課員</option>
-    </select>
-
-    <div id="addTeacherBox">
-        <input type="text" id="newTeacherName" placeholder="輸入新的陪課員名字">
-        <button type="button" onclick="confirmAddTeacher()">確認新增</button>
-        <button type="button" onclick="cancelAddTeacher()">取消</button>
-    </div>
-
-    <input type="text" id="student" placeholder="陪了誰?">
-
-    <textarea id="status" placeholder="輸入陪課內容 / 心得"></textarea>
-
-    <button onclick="addRecord()">新增紀錄</button>
+<div class="page-head">
+    <div class="eyebrow">新竹一支會</div>
+    <h1>📚 陪課紀錄系統</h1>
+    <p>陪課結束後花一分鐘記錄，讓每一次陪伴都被看見</p>
 </div>
 
-<div class="divider"></div>
-
-<div class="filter-group">
-    <div style="width:100%; color:#666; font-size:14px; margin-bottom:5px;">
-        🔎 下面是先前紀錄，可以使用搜尋工具輔助尋找
+<!-- 新增紀錄 -->
+<div class="section">
+    <div class="section-head">
+        <div class="section-badge">✏️</div>
+        <div>
+            <p class="section-title">新增今日陪課紀錄</p>
+            <p class="section-sub">陪課完之後，花一分鐘記下今天的狀況</p>
+        </div>
     </div>
 
-    <select id="viewMode">
-        <option value="detail">心得詳情</option>
-        <option value="count">陪課次數表</option>
-    </select>
+    <div class="field-row">
+        <div class="field">
+            <label for="classTime">陪課時間</label>
+            <input type="datetime-local" id="classTime">
+        </div>
+        <div class="field">
+            <label for="teacher">你是誰</label>
+            <select id="teacher" onchange="handleTeacherChange()">
+                <option value="">請選擇你的名字</option>
+                <option value="__add__">＋ 新增陪課員</option>
+            </select>
+            <div id="addTeacherBox">
+                <input type="text" id="newTeacherName" placeholder="輸入新的陪課員名字">
+                <button type="button" class="btn-ghost" onclick="confirmAddTeacher()">確認</button>
+                <button type="button" class="btn-ghost" onclick="cancelAddTeacher()">取消</button>
+            </div>
+        </div>
+    </div>
 
-    <input type="date" id="filterDate">
+    <div class="field">
+        <label for="student">陪了誰</label>
+        <input type="text" id="student" placeholder="輸入被陪課成員的名字">
+    </div>
 
-    <select id="filterTeacher" onchange="handlePersonFilterChange('teacher')">
-        <option value="">全部陪課員</option>
-    </select>
+    <div class="field">
+        <label for="status">陪課內容 / 心得</label>
+        <textarea id="status" placeholder="今天上了什麼？孩子的狀況如何？有什麼想記下來的..."></textarea>
+    </div>
 
-    <select id="filterStudent" onchange="handlePersonFilterChange('student')">
-        <option value="">全部被陪課成員</option>
-    </select>
+    <button class="btn-primary" onclick="addRecord()">送出紀錄</button>
 
-    <button onclick="applyFilter()">送出篩選</button>
-    <button onclick="resetFilter()">清除</button>
+    <div id="syncMsg"></div>
 </div>
 
-<div id="syncMsg"></div>
-<div id="records"></div>
+<!-- 查詢紀錄 -->
+<div class="section">
+    <div class="section-head">
+        <div class="section-badge">🔍</div>
+        <div>
+            <p class="section-title">查詢先前紀錄</p>
+            <p class="section-sub">用篩選工具快速找到你要的紀錄</p>
+        </div>
+    </div>
+
+    <div class="view-toggle">
+        <button type="button" id="btn-detail" class="active" onclick="setViewMode('detail')">📝 心得詳情</button>
+        <button type="button" id="btn-count" onclick="setViewMode('count')">📊 陪課次數表</button>
+    </div>
+
+    <div class="filter-grid">
+        <div class="field" style="margin-bottom:0;">
+            <label for="filterDate">日期</label>
+            <input type="date" id="filterDate">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+            <label for="filterTeacher">陪課員</label>
+            <select id="filterTeacher">
+                <option value="">全部陪課員</option>
+            </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+            <label for="filterStudent">被陪課成員</label>
+            <select id="filterStudent">
+                <option value="">全部被陪課成員</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="filter-actions">
+        <button class="apply" onclick="applyFilter()">送出篩選</button>
+        <button class="reset" onclick="resetFilter()">清除篩選</button>
+    </div>
+
+    <div id="resultCount" class="result-count"></div>
+    <div id="records"></div>
+</div>
 
 </div>
 
 <script>
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzVUwBCiDgyZg5mm8fEbAW76oLeHeZMz6MJUUuxStDz4r3P-_5uR56_ROTPNmzKgIgT/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbws0OC2ivLQJli-hAYc8JA5N2dA6Ts4SGLKNZaCLRVR3D_BDa_dUGaeUhipevUf9gdH/exec';
 
 let records = [];
 let filteredRecords = [];
+let currentViewMode = "detail";
 
 window.onload = async () => {
     setNowClassTime();
@@ -307,7 +593,7 @@ function setNowClassTime(){
 
 async function loadFromSheets(){
     try{
-        const res = await fetch(GAS_URL + "?t=" + Date.now());
+        const res = await fetch(GAS_URL);
         const data = await res.json();
 
         records = Array.isArray(data) ? data : [];
@@ -317,29 +603,6 @@ async function loadFromSheets(){
         renderDetail();
     } catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
-    }
-}
-
-function handlePersonFilterChange(type){
-    const teacherSelect = document.getElementById("filterTeacher");
-    const studentSelect = document.getElementById("filterStudent");
-
-    if(type === "teacher" && teacherSelect.value){
-        studentSelect.value = "";
-        studentSelect.disabled = true;
-    }
-
-    if(type === "teacher" && !teacherSelect.value){
-        studentSelect.disabled = false;
-    }
-
-    if(type === "student" && studentSelect.value){
-        teacherSelect.value = "";
-        teacherSelect.disabled = true;
-    }
-
-    if(type === "student" && !studentSelect.value){
-        teacherSelect.disabled = false;
     }
 }
 
@@ -399,24 +662,40 @@ async function addRecord(){
         status
     };
 
+    records.push(newRecord);
+    filteredRecords = records;
+
+    updateSelectOptions();
+    renderDetail();
+
     await syncToSheets(newRecord);
-    await loadFromSheets();
 
     document.getElementById("student").value = "";
     document.getElementById("status").value = "";
     setNowClassTime();
 }
 
+function setViewMode(mode){
+    currentViewMode = mode;
+
+    document.getElementById("btn-detail").classList.toggle("active", mode === "detail");
+    document.getElementById("btn-count").classList.toggle("active", mode === "count");
+
+    applyFilter();
+}
+
 function applyFilter(){
-    const mode = document.getElementById("viewMode").value;
+    const mode = currentViewMode;
     const d = document.getElementById("filterDate").value;
     const teacher = document.getElementById("filterTeacher").value;
     const student = document.getElementById("filterStudent").value;
 
+    document.getElementById("resultCount").textContent = "";
+
     if(mode === "count" && !teacher && !student){
         document.getElementById("records").innerHTML = `
             <div class="warn-msg">
-                ⚠️ 請先選擇一位「陪課員」或一位「被陪課成員」，再查看陪課次數表。
+                ⚠️ 請先選擇「陪課員」或「被陪課成員」，再查看陪課次數表。
             </div>
         `;
         return;
@@ -439,12 +718,8 @@ function resetFilter(){
     document.getElementById("filterDate").value = "";
     document.getElementById("filterTeacher").value = "";
     document.getElementById("filterStudent").value = "";
-    document.getElementById("filterTeacher").disabled = false;
-    document.getElementById("filterStudent").disabled = false;
-    document.getElementById("viewMode").value = "detail";
 
-    filteredRecords = records;
-    renderDetail();
+    setViewMode("detail");
 }
 
 function updateSelectOptions(){
@@ -460,7 +735,7 @@ function updateSelectOptions(){
     const students = [...new Set(records.map(r => r.student).filter(Boolean))];
 
     teacherSelect.innerHTML = `
-        <option value="">請輸入你的名字</option>
+        <option value="">請選擇你的名字</option>
         <option value="__add__">＋ 新增陪課員</option>
     `;
 
@@ -486,9 +761,6 @@ function updateSelectOptions(){
         addOptionIfNotExists(filterStudent, currentFilterStudent, currentFilterStudent);
         filterStudent.value = currentFilterStudent;
     }
-
-    handlePersonFilterChange("teacher");
-    handlePersonFilterChange("student");
 }
 
 function addOptionIfNotExists(select, value, text){
@@ -518,19 +790,33 @@ function formatClassTime(value){
 
 function renderDetail(){
     const area = document.getElementById("records");
+    const countEl = document.getElementById("resultCount");
     area.innerHTML = "";
 
     if(filteredRecords.length === 0){
-        area.innerHTML = `<div class="empty-msg">目前沒有符合條件的紀錄</div>`;
+        countEl.textContent = "";
+        area.innerHTML = `
+            <div class="empty-msg">
+                <span class="emoji">📭</span>
+                目前沒有符合條件的紀錄
+            </div>`;
         return;
     }
 
-    filteredRecords.forEach((r) => {
+    countEl.textContent = `共 ${filteredRecords.length} 筆紀錄`;
+
+    const sorted = [...filteredRecords].sort((a, b) => {
+        return (b.classTime || b.date || "").localeCompare(a.classTime || a.date || "");
+    });
+
+    sorted.forEach((r) => {
         area.innerHTML += `
         <div class="card">
-            <h3>${escapeHTML(r.student)}</h3>
-            <p>👤 陪課員：${escapeHTML(r.teacher || "未填寫")}</p>
-            <p>🕒 陪課時間：${escapeHTML(formatClassTime(r.classTime || r.date))}</p>
+            <div class="card-top">
+                <h3 class="card-student">${escapeHTML(r.student)}</h3>
+                <span class="card-time">🕒 ${escapeHTML(formatClassTime(r.classTime || r.date))}</span>
+            </div>
+            <span class="card-teacher">👤 ${escapeHTML(r.teacher || "未填寫")}</span>
             <pre>${escapeHTML(r.status || "")}</pre>
         </div>`;
     });
@@ -538,8 +824,10 @@ function renderDetail(){
 
 function renderCountChart(){
     const area = document.getElementById("records");
+    const countEl = document.getElementById("resultCount");
 
     const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
     const dates = [];
 
     for(let i = -15; i <= 15; i++){
@@ -557,14 +845,15 @@ function renderCountChart(){
     dates.forEach(date => countMap[date] = 0);
 
     filteredRecords.forEach(r => {
-        const recordDate = normalizeDate(r.date || r.classTime);
-
-        if(countMap[recordDate] !== undefined){
-            countMap[recordDate]++;
+        if(countMap[r.date] !== undefined){
+            countMap[r.date]++;
         }
     });
 
+    const totalCount = Object.values(countMap).reduce((a,b) => a+b, 0);
     const maxCount = Math.max(...Object.values(countMap), 1);
+
+    countEl.textContent = `區間內共 ${totalCount} 筆紀錄`;
 
     let html = `
         <div class="chart-box">
@@ -574,13 +863,14 @@ function renderCountChart(){
 
     dates.forEach(date => {
         const count = countMap[date];
-        const height = count === 0 ? 4 : (count / maxCount) * 200;
+        const height = count === 0 ? 4 : (count / maxCount) * 180;
+        const todayClass = date === todayStr ? " is-today" : "";
 
         html += `
-            <div class="bar-wrap">
+            <div class="bar-wrap${todayClass}">
                 <div class="bar-count">${count}</div>
                 <div class="bar" style="height:${height}px"></div>
-                <div class="bar-date">${date.slice(5)}</div>
+                <div class="bar-date">${date.slice(5)}${date === todayStr ? " ・今天" : ""}</div>
             </div>
         `;
     });
@@ -591,29 +881,6 @@ function renderCountChart(){
     `;
 
     area.innerHTML = html;
-}
-
-function normalizeDate(value){
-    if(!value) return "";
-
-    if(value instanceof Date){
-        const yyyy = value.getFullYear();
-        const mm = String(value.getMonth() + 1).padStart(2, "0");
-        const dd = String(value.getDate()).padStart(2, "0");
-        return `${yyyy}-${mm}-${dd}`;
-    }
-
-    const str = String(value);
-
-    if(str.includes("T")){
-        return str.slice(0, 10);
-    }
-
-    if(str.includes("-")){
-        return str.slice(0, 10);
-    }
-
-    return str;
 }
 
 async function syncToSheets(record){
@@ -627,15 +894,15 @@ async function syncToSheets(record){
             body:JSON.stringify(record)
         });
 
-        showSyncMsg("✅ 已同步", "ok");
+        showSyncMsg("✅ 已同步至雲端", "ok");
     } catch(e){
-        showSyncMsg("❌ 同步失敗", "fail");
+        showSyncMsg("❌ 同步失敗，請檢查網路後再試一次", "fail");
     }
 }
 
 function showSyncMsg(msg,type){
     const el = document.getElementById("syncMsg");
-    el.innerHTML = `<span class="sync-status sync-${type}">${msg}</span>`;
+    el.innerHTML = `<div class="sync-status sync-${type}">${msg}</div>`;
 }
 
 </script>
