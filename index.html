@@ -34,17 +34,13 @@ input,textarea,select,button{
     padding:10px;
     border-radius:8px;
     border:1px solid #ccc;
+    font-size:14px;
 }
 
 input,textarea{flex:1;}
 
-#student{
-    flex:0.8;
-}
-
-#teacher{
-    flex:0.9;
-}
+#student{flex:0.8;}
+#teacher{flex:0.9;}
 
 textarea{
     min-height:140px;
@@ -91,6 +87,57 @@ pre{
     white-space:pre-wrap;
     word-break:break-word;
 }
+
+/* 查詢區欄位變矮 */
+.filter-group input,
+.filter-group select,
+.filter-group button{
+    padding:6px 8px;
+    height:34px;
+    font-size:13px;
+}
+
+/* 新增陪課員輸入區 */
+#addTeacherBox{
+    width:100%;
+    display:none;
+    gap:10px;
+}
+
+#addTeacherBox input{
+    flex:1;
+}
+
+@media(max-width:600px){
+    body{
+        padding:12px;
+    }
+
+    .container{
+        padding:16px;
+    }
+
+    .input-group,
+    .filter-group{
+        gap:8px;
+    }
+
+    input,select,button{
+        width:100%;
+        flex:auto;
+    }
+
+    textarea{
+        min-height:130px;
+    }
+
+    .filter-group input,
+    .filter-group select,
+    .filter-group button{
+        height:32px;
+        padding:5px 8px;
+    }
+}
 </style>
 </head>
 
@@ -103,12 +150,18 @@ pre{
         🔎 下面是陪課完之後可以來這邊新增當日狀況
     </div>
 
-    <input type="date" id="date">
+    <input type="datetime-local" id="classTime">
 
     <select id="teacher" onchange="handleTeacherChange()">
         <option value="">請輸入你的名字</option>
         <option value="__add__">＋ 新增陪課員</option>
     </select>
+
+    <div id="addTeacherBox">
+        <input type="text" id="newTeacherName" placeholder="輸入新的陪課員名字">
+        <button type="button" onclick="confirmAddTeacher()">確認新增</button>
+        <button type="button" onclick="cancelAddTeacher()">取消</button>
+    </div>
 
     <input type="text" id="student" placeholder="陪了誰?">
 
@@ -145,14 +198,25 @@ pre{
 
 <script>
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9XDPTT4YqE7vGO_uNcEam76Oi48LlNq33wmslAUXYAG6ROtTS6mbFZgqRkaYDm66i/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbws0OC2ivLQJli-hAYc8JA5N2dA6Ts4SGLKNZaCLRVR3D_BDa_dUGaeUhipevUf9gdH/exec';
 
 let records = [];
 let filteredRecords = [];
 
 window.onload = async () => {
+    setNowClassTime();
     await loadFromSheets();
 };
+
+function setNowClassTime(){
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0,16);
+
+    document.getElementById("classTime").value = local;
+}
 
 async function loadFromSheets(){
     try{
@@ -173,33 +237,52 @@ function handleTeacherChange(){
     const select = document.getElementById("teacher");
 
     if(select.value === "__add__"){
-        const name = prompt("請輸入新的陪課員名字");
-
-        if(!name || !name.trim()){
-            select.value = "";
-            return;
-        }
-
-        const cleanName = name.trim();
-        addOptionIfNotExists(select, cleanName, cleanName);
-
-        select.value = cleanName;
-        updateSelectOptions();
+        document.getElementById("addTeacherBox").style.display = "flex";
+        document.getElementById("newTeacherName").focus();
+    }else{
+        document.getElementById("addTeacherBox").style.display = "none";
     }
 }
 
+function confirmAddTeacher(){
+    const input = document.getElementById("newTeacherName");
+    const name = input.value.trim();
+
+    if(!name){
+        alert("請輸入陪課員名字");
+        return;
+    }
+
+    const teacherSelect = document.getElementById("teacher");
+
+    addOptionIfNotExists(teacherSelect, name, name);
+    teacherSelect.value = name;
+
+    input.value = "";
+    document.getElementById("addTeacherBox").style.display = "none";
+    updateSelectOptions();
+}
+
+function cancelAddTeacher(){
+    document.getElementById("newTeacherName").value = "";
+    document.getElementById("addTeacherBox").style.display = "none";
+    document.getElementById("teacher").value = "";
+}
+
 async function addRecord(){
-    const date = document.getElementById("date").value;
+    const classTime = document.getElementById("classTime").value;
+    const date = classTime ? classTime.slice(0,10) : "";
     const teacher = document.getElementById("teacher").value;
     const student = document.getElementById("student").value.trim();
     const status = document.getElementById("status").value.trim();
 
-    if(!date || !teacher || teacher === "__add__" || !student){
-        alert("請填日期、陪課員與陪了誰");
+    if(!classTime || !teacher || teacher === "__add__" || !student){
+        alert("請填陪課時間、陪課員與陪了誰");
         return;
     }
 
     const newRecord = {
+        classTime,
         date,
         teacher,
         student,
@@ -216,6 +299,7 @@ async function addRecord(){
 
     document.getElementById("student").value = "";
     document.getElementById("status").value = "";
+    setNowClassTime();
 }
 
 function applyFilter(){
@@ -256,9 +340,7 @@ function updateSelectOptions(){
         <option value="__add__">＋ 新增陪課員</option>
     `;
 
-    teachers.forEach(name => {
-        addOptionIfNotExists(teacherSelect, name, name);
-    });
+    teachers.forEach(name => addOptionIfNotExists(teacherSelect, name, name));
 
     if(currentTeacher && currentTeacher !== "__add__"){
         addOptionIfNotExists(teacherSelect, currentTeacher, currentTeacher);
@@ -266,14 +348,10 @@ function updateSelectOptions(){
     }
 
     filterTeacher.innerHTML = `<option value="">全部陪課員</option>`;
-    teachers.forEach(name => {
-        addOptionIfNotExists(filterTeacher, name, name);
-    });
+    teachers.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
 
     filterStudent.innerHTML = `<option value="">全部被陪課成員</option>`;
-    students.forEach(name => {
-        addOptionIfNotExists(filterStudent, name, name);
-    });
+    students.forEach(name => addOptionIfNotExists(filterStudent, name, name));
 }
 
 function addOptionIfNotExists(select, value, text){
@@ -287,6 +365,20 @@ function addOptionIfNotExists(select, value, text){
     }
 }
 
+function escapeHTML(str){
+    return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatClassTime(value){
+    if(!value) return "未填寫";
+    return value.replace("T", " ");
+}
+
 function render(){
     const area = document.getElementById("records");
     area.innerHTML = "";
@@ -294,10 +386,10 @@ function render(){
     filteredRecords.forEach((r) => {
         area.innerHTML += `
         <div class="card">
-            <h3>${r.student}</h3>
-            <p>👤 陪課員：${r.teacher || "未填寫"}</p>
-            <p>📅 ${r.date}</p>
-            <pre>${r.status || ""}</pre>
+            <h3>${escapeHTML(r.student)}</h3>
+            <p>👤 陪課員：${escapeHTML(r.teacher || "未填寫")}</p>
+            <p>🕒 陪課時間：${escapeHTML(formatClassTime(r.classTime || r.date))}</p>
+            <pre>${escapeHTML(r.status || "")}</pre>
         </div>`;
     });
 }
