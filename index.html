@@ -38,8 +38,18 @@ input,textarea,select,button{
 
 input,textarea{flex:1;}
 
+#student{
+    flex:0.8;
+}
+
+#teacher{
+    flex:0.7;
+}
+
 textarea{
-    min-height:80px;
+    min-height:140px;
+    width:100%;
+    resize:vertical;
 }
 
 button{
@@ -71,7 +81,6 @@ button:hover{opacity:.85;}
 .sync-fail{background:#fde8e8;color:#9a2c2c;}
 .sync-ing{background:#fff3cd;color:#856404;}
 
-/* ===== 分隔線 ===== */
 .divider{
     height:2px;
     background:#ddd;
@@ -84,21 +93,29 @@ button:hover{opacity:.85;}
 <div class="container">
 <h1>📚 陪課紀錄系統</h1>
 
-<!-- ===== 新增區 ===== -->
 <div class="input-group">
     <div style="width:100%; color:#666; font-size:14px; margin-bottom:5px;">
         🔎 下面是陪課完之後可以來這邊新增當日狀況
     </div>
+
     <input type="date" id="date">
-    <input type="text" id="student" placeholder="成員姓名">
-    <textarea id="status" placeholder="輸入陪課內容"></textarea>
+
+    <select id="teacher">
+        <option value="">我是誰？</option>
+        <option value="家毅">家毅</option>
+    </select>
+
+    <button type="button" onclick="addTeacher()">新增陪課員</button>
+
+    <input type="text" id="student" placeholder="陪了誰?">
+
+    <textarea id="status" placeholder="輸入陪課內容 / 心得"></textarea>
+
     <button onclick="addRecord()">新增紀錄</button>
 </div>
 
-<!-- ===== 分隔線 ===== -->
 <div class="divider"></div>
 
-<!-- ===== 篩選區 ===== -->
 <div class="filter-group">
     <div style="width:100%; color:#666; font-size:14px; margin-bottom:5px;">
         🔎 下面是先前紀錄，可以使用搜尋工具輔助尋找
@@ -126,7 +143,6 @@ window.onload = async () => {
     await loadFromSheets();
 };
 
-// ===== 讀資料 =====
 async function loadFromSheets(){
     try{
         const res = await fetch(GAS_URL);
@@ -141,18 +157,46 @@ async function loadFromSheets(){
     }
 }
 
-// ===== 新增 =====
-async function addRecord(){
-    const date = document.getElementById("date").value;
-    const student = document.getElementById("student").value.trim();
-    const status = document.getElementById("status").value.trim();
+function addTeacher(){
+    const name = prompt("輸入新的陪課員名稱");
 
-    if(!date || !student){
-        alert("請填日期與姓名");
+    if(!name || !name.trim()) return;
+
+    const cleanName = name.trim();
+    const select = document.getElementById("teacher");
+
+    const exists = [...select.options].some(option => option.value === cleanName);
+
+    if(exists){
+        select.value = cleanName;
         return;
     }
 
-    const newRecord = { date, student, status };
+    const option = document.createElement("option");
+    option.value = cleanName;
+    option.textContent = cleanName;
+
+    select.appendChild(option);
+    select.value = cleanName;
+}
+
+async function addRecord(){
+    const date = document.getElementById("date").value;
+    const teacher = document.getElementById("teacher").value;
+    const student = document.getElementById("student").value.trim();
+    const status = document.getElementById("status").value.trim();
+
+    if(!date || !teacher || !student){
+        alert("請填日期、陪課員與陪了誰");
+        return;
+    }
+
+    const newRecord = {
+        date,
+        teacher,
+        student,
+        status
+    };
 
     records.push(newRecord);
     filteredRecords = records;
@@ -165,7 +209,6 @@ async function addRecord(){
     document.getElementById("status").value = "";
 }
 
-// ===== 篩選 =====
 function applyFilter(){
     const d = document.getElementById("filterDate").value;
     const s = document.getElementById("filterStudent").value.trim();
@@ -178,7 +221,6 @@ function applyFilter(){
     render();
 }
 
-// ===== 清除 =====
 function resetFilter(){
     document.getElementById("filterDate").value = "";
     document.getElementById("filterStudent").value = "";
@@ -187,7 +229,6 @@ function resetFilter(){
     render();
 }
 
-// ===== 畫面 =====
 function render(){
     const area = document.getElementById("records");
     area.innerHTML = "";
@@ -196,13 +237,13 @@ function render(){
         area.innerHTML += `
         <div class="card">
             <h3>${r.student}</h3>
+            <p>👤 陪課員：${r.teacher || "未填寫"}</p>
             <p>📅 ${r.date}</p>
             <pre>${r.status}</pre>
         </div>`;
     });
 }
 
-// ===== 同步 =====
 async function syncToSheets(record){
     showSyncMsg("⏳ 同步中...", "ing");
 
