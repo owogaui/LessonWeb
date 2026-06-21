@@ -88,7 +88,6 @@ pre{
     word-break:break-word;
 }
 
-/* 查詢區欄位變矮 */
 .filter-group input,
 .filter-group select,
 .filter-group button{
@@ -97,7 +96,6 @@ pre{
     font-size:13px;
 }
 
-/* 新增陪課員輸入區 */
 #addTeacherBox{
     width:100%;
     display:none;
@@ -109,7 +107,6 @@ pre{
     flex:1;
 }
 
-/* 陪課次數表 */
 .chart-box{
     margin-top:20px;
     background:#f8f9ff;
@@ -163,14 +160,17 @@ pre{
     padding:30px 0;
 }
 
-@media(max-width:600px){
-    body{
-        padding:12px;
-    }
+.warn-msg{
+    background:#fff3cd;
+    color:#856404;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+}
 
-    .container{
-        padding:16px;
-    }
+@media(max-width:600px){
+    body{padding:12px;}
+    .container{padding:16px;}
 
     .input-group,
     .filter-group{
@@ -200,11 +200,7 @@ pre{
         width:100%;
     }
 
-    #addTeacherBox input{
-        width:100%;
-        flex:none;
-    }
-
+    #addTeacherBox input,
     #addTeacherBox button{
         width:100%;
         flex:none;
@@ -263,7 +259,7 @@ pre{
         🔎 下面是先前紀錄，可以使用搜尋工具輔助尋找
     </div>
 
-    <select id="viewMode" onchange="applyFilter()">
+    <select id="viewMode">
         <option value="detail">心得詳情</option>
         <option value="count">陪課次數表</option>
     </select>
@@ -318,7 +314,7 @@ async function loadFromSheets(){
         filteredRecords = records;
 
         updateSelectOptions();
-        render();
+        renderDetail();
     } catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
     }
@@ -384,7 +380,7 @@ async function addRecord(){
     filteredRecords = records;
 
     updateSelectOptions();
-    render();
+    renderDetail();
 
     await syncToSheets(newRecord);
 
@@ -394,9 +390,19 @@ async function addRecord(){
 }
 
 function applyFilter(){
+    const mode = document.getElementById("viewMode").value;
     const d = document.getElementById("filterDate").value;
     const teacher = document.getElementById("filterTeacher").value;
     const student = document.getElementById("filterStudent").value;
+
+    if(mode === "count" && !teacher && !student){
+        document.getElementById("records").innerHTML = `
+            <div class="warn-msg">
+                ⚠️ 請先選擇「陪課員」或「被陪課成員」，再查看陪課次數表。
+            </div>
+        `;
+        return;
+    }
 
     filteredRecords = records.filter(r => {
         return (!d || r.date === d) &&
@@ -404,7 +410,11 @@ function applyFilter(){
                (!student || r.student === student);
     });
 
-    render();
+    if(mode === "count"){
+        renderCountChart();
+    }else{
+        renderDetail();
+    }
 }
 
 function resetFilter(){
@@ -414,7 +424,7 @@ function resetFilter(){
     document.getElementById("viewMode").value = "detail";
 
     filteredRecords = records;
-    render();
+    renderDetail();
 }
 
 function updateSelectOptions(){
@@ -423,6 +433,8 @@ function updateSelectOptions(){
     const filterStudent = document.getElementById("filterStudent");
 
     const currentTeacher = teacherSelect.value;
+    const currentFilterTeacher = filterTeacher.value;
+    const currentFilterStudent = filterStudent.value;
 
     const teachers = [...new Set(records.map(r => r.teacher).filter(Boolean))];
     const students = [...new Set(records.map(r => r.student).filter(Boolean))];
@@ -442,8 +454,18 @@ function updateSelectOptions(){
     filterTeacher.innerHTML = `<option value="">全部陪課員</option>`;
     teachers.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
 
+    if(currentFilterTeacher){
+        addOptionIfNotExists(filterTeacher, currentFilterTeacher, currentFilterTeacher);
+        filterTeacher.value = currentFilterTeacher;
+    }
+
     filterStudent.innerHTML = `<option value="">全部被陪課成員</option>`;
     students.forEach(name => addOptionIfNotExists(filterStudent, name, name));
+
+    if(currentFilterStudent){
+        addOptionIfNotExists(filterStudent, currentFilterStudent, currentFilterStudent);
+        filterStudent.value = currentFilterStudent;
+    }
 }
 
 function addOptionIfNotExists(select, value, text){
@@ -471,16 +493,9 @@ function formatClassTime(value){
     return value.replace("T", " ");
 }
 
-function render(){
+function renderDetail(){
     const area = document.getElementById("records");
-    const mode = document.getElementById("viewMode")?.value || "detail";
-
     area.innerHTML = "";
-
-    if(mode === "count"){
-        renderCountChart();
-        return;
-    }
 
     if(filteredRecords.length === 0){
         area.innerHTML = `<div class="empty-msg">目前沒有符合條件的紀錄</div>`;
@@ -516,10 +531,7 @@ function renderCountChart(){
     }
 
     const countMap = {};
-
-    dates.forEach(date => {
-        countMap[date] = 0;
-    });
+    dates.forEach(date => countMap[date] = 0);
 
     filteredRecords.forEach(r => {
         if(countMap[r.date] !== undefined){
