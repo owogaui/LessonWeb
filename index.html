@@ -36,7 +36,6 @@ body{
     margin:auto;
 }
 
-/* ---------- Header ---------- */
 .page-head{
     text-align:center;
     margin-bottom:22px;
@@ -61,7 +60,6 @@ body{
     margin:6px 0 0;
 }
 
-/* ---------- Section card shell ---------- */
 .section{
     background:var(--card);
     border-radius:var(--radius);
@@ -99,7 +97,6 @@ body{
     margin:2px 0 0;
 }
 
-/* ---------- Form ---------- */
 .field{
     margin-bottom:14px;
 }
@@ -192,6 +189,23 @@ textarea{
     color:var(--blue-dark);
 }
 
+.btn-delete-person{
+    margin-top:8px;
+    width:100%;
+    padding:10px 12px;
+    background:#fff;
+    color:#9a2c2c;
+    border:1.5px solid #f3c7c7;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.btn-delete-person:hover{
+    background:#fde8e8;
+    border-color:#e9a8a8;
+}
+
 .sync-status{
     font-size:13px;
     margin-top:12px;
@@ -207,7 +221,6 @@ textarea{
 .sync-fail{background:var(--fail-bg);color:var(--fail-fg);}
 .sync-ing{background:var(--ing-bg);color:var(--ing-fg);}
 
-/* ---------- Filter section ---------- */
 .view-toggle{
     display:flex;
     background:var(--blue-soft);
@@ -278,7 +291,6 @@ textarea{
     margin:14px 0 10px;
 }
 
-/* ---------- Record cards ---------- */
 .card{
     background:#fbfcff;
     border:1px solid var(--line);
@@ -336,7 +348,6 @@ textarea{
     color:#aab0bd;
 }
 
-/* ---------- Chart ---------- */
 .chart-box{
     background:#fbfcff;
     border:1px solid var(--line);
@@ -398,7 +409,6 @@ textarea{
     margin-top:6px;
 }
 
-/* ---------- Empty / warn states ---------- */
 .empty-msg{
     text-align:center;
     color:var(--ink-soft);
@@ -420,125 +430,20 @@ textarea{
     font-size:13.5px;
 }
 
-
-/* ---------- Manage people ---------- */
-.manage-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-}
-
-.manage-card{
-    background:#fbfcff;
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:14px;
-}
-
-.manage-card h3{
-    margin:0 0 10px;
-    font-size:14px;
-}
-
-.person-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:9px 0;
-    border-bottom:1px solid var(--line);
-}
-
-.person-row:last-child{border-bottom:none;}
-
-.person-name{
-    font-size:13.5px;
-    font-weight:700;
-}
-
-.person-actions{
-    display:flex;
-    gap:6px;
-    flex-shrink:0;
-}
-
-.btn-small{
-    border:none;
-    border-radius:8px;
-    padding:6px 9px;
-    font-size:12px;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.btn-delete-soft{
-    background:var(--ing-bg);
-    color:var(--ing-fg);
-}
-
-.btn-delete-hard{
-    background:var(--fail-bg);
-    color:var(--fail-fg);
-}
-
-.manage-note{
-    font-size:12.5px;
-    color:var(--ink-soft);
-    line-height:1.6;
-    margin:0 0 12px;
-}
-
-/* ---------- Mobile ---------- */
 @media(max-width:640px){
     body{padding:16px 10px 50px;}
-
     .section{padding:16px;}
-
-    .field-row{
-        flex-direction:column;
-        gap:0;
-    }
-
-    .filter-grid{
-        grid-template-columns:1fr;
-    }
-
-    .filter-actions{
-        flex-direction:column;
-    }
-
-    .manage-grid{
-        grid-template-columns:1fr;
-    }
-
-    .filter-actions button{
-        width:100%;
-    }
-
-    .add-entity-box{
-        flex-direction:column;
-    }
-
+    .field-row{flex-direction:column;gap:0;}
+    .filter-grid{grid-template-columns:1fr;}
+    .filter-actions{flex-direction:column;}
+    .filter-actions button{width:100%;}
+    .add-entity-box{flex-direction:column;}
     .add-entity-box input,
-    .add-entity-box button{
-        width:100%;
-    }
-
+    .add-entity-box button{width:100%;}
     #newTeacherName,
-    #newStudentName{
-        font-size:16px;
-        padding:12px;
-    }
-
-    .card-top{
-        flex-direction:column;
-        gap:2px;
-    }
-
-    .chart{
-        height:200px;
-        min-width:820px;
-    }
+    #newStudentName{font-size:16px;padding:12px;}
+    .card-top{flex-direction:column;gap:2px;}
+    .chart{height:200px;min-width:820px;}
 }
 </style>
 </head>
@@ -552,7 +457,6 @@ textarea{
     <p>陪課結束後花一分鐘記錄，讓每一次陪伴都被看見</p>
 </div>
 
-<!-- 新增紀錄 -->
 <div class="section">
     <div class="section-head">
         <div class="section-badge">✏️</div>
@@ -567,32 +471,35 @@ textarea{
             <label for="classTime">陪課時間</label>
             <input type="datetime-local" id="classTime">
         </div>
+
         <div class="field">
             <label for="teacher">你是誰</label>
-            <select id="teacher" onchange="handleTeacherChange()">
+            <select id="teacher" onchange="handleTeacherSelect()">
                 <option value="">請選擇你的名字</option>
                 <option value="__add__">＋ 新增陪課員</option>
+            <option value="__delete__">🗑️ 刪除陪課員</option>
             </select>
             <div id="addTeacherBox" class="add-entity-box">
                 <input type="text" id="newTeacherName" placeholder="輸入新的陪課員名字">
                 <button type="button" class="btn-ghost" onclick="confirmAddTeacher()">確認</button>
                 <button type="button" class="btn-ghost" onclick="cancelAddTeacher()">取消</button>
             </div>
-        </div>
+            </div>
     </div>
 
     <div class="field">
         <label for="student">陪了誰</label>
-        <select id="student" onchange="handleStudentChange()">
+        <select id="student" onchange="handleStudentSelect()">
             <option value="">請選擇被陪課成員</option>
             <option value="__add__">＋ 新增被陪課成員</option>
+            <option value="__delete__">🗑️ 刪除被陪課成員</option>
         </select>
         <div id="addStudentBox" class="add-entity-box">
             <input type="text" id="newStudentName" placeholder="輸入新的被陪課成員名字">
             <button type="button" class="btn-ghost" onclick="confirmAddStudent()">確認</button>
             <button type="button" class="btn-ghost" onclick="cancelAddStudent()">取消</button>
         </div>
-    </div>
+        </div>
 
     <div class="field">
         <label for="status">陪課內容 / 心得</label>
@@ -600,11 +507,9 @@ textarea{
     </div>
 
     <button class="btn-primary" onclick="addRecord()">送出紀錄</button>
-
     <div id="syncMsg"></div>
 </div>
 
-<!-- 查詢紀錄 -->
 <div class="section">
     <div class="section-head">
         <div class="section-badge">🔍</div>
@@ -647,45 +552,15 @@ textarea{
     <div id="records"></div>
 </div>
 
-
-<!-- 管理名單 -->
-<div class="section">
-    <div class="section-head">
-        <div class="section-badge">⚙️</div>
-        <div>
-            <p class="section-title">管理陪課員與被陪課成員</p>
-            <p class="section-sub">可以只從名單移除，也可以連同相關陪課紀錄一起刪除</p>
-        </div>
-    </div>
-
-    <p class="manage-note">
-        「從名單移除」會保留舊紀錄，只是不再出現在下拉選單。
-        「連紀錄刪除」會把這個人的相關陪課紀錄也一起刪掉。
-    </p>
-
-    <div class="manage-grid">
-        <div class="manage-card">
-            <h3>陪課員名單</h3>
-            <div id="teacherManageList"></div>
-        </div>
-        <div class="manage-card">
-            <h3>被陪課成員名單</h3>
-            <div id="studentManageList"></div>
-        </div>
-    </div>
-</div>
-
 </div>
 
 <script>
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbytO2G46eDADyqxfIjXyhQ2xg1nFj9tBNFoDPvLwt4vCryn_RKJbVfy-mfY_5bcWzEM/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1ZnUYEuLvqnydVCGmYBRHpS-LJjywHM24PR0zbIxa2TlWu9xrszL58EbzoCOpATpg/exec';
 
 let records = [];
 let filteredRecords = [];
-let teachers = [];
-let students = [];
 let currentViewMode = "detail";
+let hiddenPeople = { teacher: [], student: [] };
 
 window.onload = async () => {
     setNowClassTime();
@@ -698,32 +573,72 @@ function setNowClassTime(){
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0,16);
-
     document.getElementById("classTime").value = local;
 }
 
 async function loadFromSheets(){
     try{
-        const res = await fetch(`${GAS_URL}?action=init`);
+        const res = await fetch(GAS_URL);
         const data = await res.json();
 
-        records = Array.isArray(data.records) ? data.records : [];
-        teachers = Array.isArray(data.teachers) ? data.teachers.map(p => p.name) : [];
-        students = Array.isArray(data.students) ? data.students.map(p => p.name) : [];
-        filteredRecords = records;
+        if(Array.isArray(data)){
+            records = data;
+            hiddenPeople = { teacher: [], student: [] };
+        }else{
+            records = Array.isArray(data.records) ? data.records : [];
+            hiddenPeople = data.hiddenPeople || { teacher: [], student: [] };
+            hiddenPeople.teacher = Array.isArray(hiddenPeople.teacher) ? hiddenPeople.teacher : [];
+            hiddenPeople.student = Array.isArray(hiddenPeople.student) ? hiddenPeople.student : [];
+        }
 
-        syncPeopleFromOldRecords();
+        filteredRecords = records;
         updateSelectOptions();
         renderDetail();
-        renderManageLists();
-    } catch(err){
+    }catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
+        console.error(err);
     }
+}
+
+
+function handleTeacherSelect(){
+    const select=document.getElementById("teacher");
+    if(select.value==="__add__"){
+        handleTeacherChange();
+        return;
+    }
+    if(select.value==="__delete__"){
+        const target=prompt("請輸入要刪除的陪課員姓名（需與選單相同）");
+        select.value="";
+        if(target){
+            select.value=target;
+            deleteSelectedPerson("teacher");
+        }
+        return;
+    }
+    document.getElementById("addTeacherBox").style.display="none";
+}
+
+function handleStudentSelect(){
+    const select=document.getElementById("student");
+    if(select.value==="__add__"){
+        handleStudentChange();
+        return;
+    }
+    if(select.value==="__delete__"){
+        const target=prompt("請輸入要刪除的被陪課成員姓名（需與選單相同）");
+        select.value="";
+        if(target){
+            select.value=target;
+            deleteSelectedPerson("student");
+        }
+        return;
+    }
+    document.getElementById("addStudentBox").style.display="none";
 }
 
 function handleTeacherChange(){
     const select = document.getElementById("teacher");
-
     if(select.value === "__add__"){
         document.getElementById("addTeacherBox").style.display = "flex";
         document.getElementById("newTeacherName").focus();
@@ -732,7 +647,7 @@ function handleTeacherChange(){
     }
 }
 
-async function confirmAddTeacher(){
+function confirmAddTeacher(){
     const input = document.getElementById("newTeacherName");
     const name = input.value.trim();
 
@@ -741,20 +656,14 @@ async function confirmAddTeacher(){
         return;
     }
 
-    if(!teachers.includes(name)){
-        teachers.push(name);
-    }
-
     const teacherSelect = document.getElementById("teacher");
     addOptionIfNotExists(teacherSelect, name, name);
     teacherSelect.value = name;
 
+    hiddenPeople.teacher = hiddenPeople.teacher.filter(item => item !== name);
     input.value = "";
     document.getElementById("addTeacherBox").style.display = "none";
     updateSelectOptions();
-    renderManageLists();
-
-    await postToSheets({ action:"addTeacher", name });
 }
 
 function cancelAddTeacher(){
@@ -765,7 +674,6 @@ function cancelAddTeacher(){
 
 function handleStudentChange(){
     const select = document.getElementById("student");
-
     if(select.value === "__add__"){
         document.getElementById("addStudentBox").style.display = "flex";
         document.getElementById("newStudentName").focus();
@@ -774,7 +682,7 @@ function handleStudentChange(){
     }
 }
 
-async function confirmAddStudent(){
+function confirmAddStudent(){
     const input = document.getElementById("newStudentName");
     const name = input.value.trim();
 
@@ -783,20 +691,14 @@ async function confirmAddStudent(){
         return;
     }
 
-    if(!students.includes(name)){
-        students.push(name);
-    }
-
     const studentSelect = document.getElementById("student");
     addOptionIfNotExists(studentSelect, name, name);
     studentSelect.value = name;
 
+    hiddenPeople.student = hiddenPeople.student.filter(item => item !== name);
     input.value = "";
     document.getElementById("addStudentBox").style.display = "none";
     updateSelectOptions();
-    renderManageLists();
-
-    await postToSheets({ action:"addStudent", name });
 }
 
 function cancelAddStudent(){
@@ -817,23 +719,12 @@ async function addRecord(){
         return;
     }
 
-    const newRecord = {
-        classTime,
-        date,
-        teacher,
-        student,
-        status
-    };
+    const newRecord = { classTime, date, teacher, student, status };
 
     records.push(newRecord);
     filteredRecords = records;
-
-    if(!teachers.includes(teacher)) teachers.push(teacher);
-    if(!students.includes(student)) students.push(student);
-
     updateSelectOptions();
     renderDetail();
-    renderManageLists();
 
     await syncToSheets(newRecord);
 
@@ -842,27 +733,85 @@ async function addRecord(){
     setNowClassTime();
 }
 
-function setViewMode(mode){
-    currentViewMode = mode;
+async function deleteSelectedPerson(type){
+    const selectId = type === "teacher" ? "teacher" : "student";
+    const select = document.getElementById(selectId);
+    const name = select.value;
+    const label = type === "teacher" ? "陪課員" : "被陪課成員";
 
-    document.getElementById("btn-detail").classList.toggle("active", mode === "detail");
-    document.getElementById("btn-count").classList.toggle("active", mode === "count");
+    if(!name || name === "__add__"){
+        alert(`請先選擇要刪除的${label}`);
+        return;
+    }
 
+    const firstConfirm = confirm(`第一次確認：你確定要刪除「${name}」這位${label}嗎？`);
+    if(!firstConfirm) return;
+
+    const secondConfirm = confirm(`第二次確認：刪除後「${name}」不會再出現在選單中，但舊紀錄不會被刪掉。確定繼續？`);
+    if(!secondConfirm) return;
+
+    hiddenPeople[type].push(name);
+    hiddenPeople[type] = [...new Set(hiddenPeople[type])];
+
+    if(type === "teacher"){
+        document.getElementById("teacher").value = "";
+        document.getElementById("filterTeacher").value = "";
+    }else{
+        document.getElementById("student").value = "";
+        document.getElementById("filterStudent").value = "";
+    }
+
+    updateSelectOptions();
     applyFilter();
+    await syncHiddenPerson(type, name);
+    alert(`已刪除「${name}」`);
+}
+
+async function syncHiddenPerson(type, name){
+    try{
+        await fetch(GAS_URL, {
+            method:"POST",
+            mode:"no-cors",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify({
+                action:"hidePerson",
+                type,
+                name
+            })
+        });
+    }catch(err){
+        alert("刪除同步失敗，請檢查網路後再試一次");
+        console.error(err);
+    }
 }
 
 function handleFilterTeacherChange(){
-    const teacher = document.getElementById("filterTeacher").value;
-    if(teacher){
-        document.getElementById("filterStudent").value = "";
+    const filterTeacher = document.getElementById("filterTeacher");
+    const filterStudent = document.getElementById("filterStudent");
+    if(filterTeacher.value){
+        filterStudent.value = "";
+        filterStudent.disabled = true;
+    }else{
+        filterStudent.disabled = false;
     }
 }
 
 function handleFilterStudentChange(){
-    const student = document.getElementById("filterStudent").value;
-    if(student){
-        document.getElementById("filterTeacher").value = "";
+    const filterTeacher = document.getElementById("filterTeacher");
+    const filterStudent = document.getElementById("filterStudent");
+    if(filterStudent.value){
+        filterTeacher.value = "";
+        filterTeacher.disabled = true;
+    }else{
+        filterTeacher.disabled = false;
     }
+}
+
+function setViewMode(mode){
+    currentViewMode = mode;
+    document.getElementById("btn-detail").classList.toggle("active", mode === "detail");
+    document.getElementById("btn-count").classList.toggle("active", mode === "count");
+    applyFilter();
 }
 
 function applyFilter(){
@@ -888,12 +837,8 @@ function applyFilter(){
                (!student || r.student === student);
     });
 
-    // 除錯用：在瀏覽器 console 可以看到目前資料筆數與篩選結果
     console.log("[陪課紀錄] records 總筆數:", records.length);
     console.log("[陪課紀錄] filteredRecords 筆數:", filteredRecords.length);
-    if(records.length > 0){
-        console.log("[陪課紀錄] 第一筆原始資料樣本:", records[0]);
-    }
 
     if(mode === "count"){
         renderCountChart();
@@ -906,7 +851,8 @@ function resetFilter(){
     document.getElementById("filterDate").value = "";
     document.getElementById("filterTeacher").value = "";
     document.getElementById("filterStudent").value = "";
-
+    document.getElementById("filterTeacher").disabled = false;
+    document.getElementById("filterStudent").disabled = false;
     setViewMode("detail");
 }
 
@@ -921,17 +867,20 @@ function updateSelectOptions(){
     const currentFilterTeacher = filterTeacher.value;
     const currentFilterStudent = filterStudent.value;
 
-    const teacherNames = [...new Set(teachers.filter(Boolean))];
-    const studentNames = [...new Set(students.filter(Boolean))];
+    const teachers = [...new Set(records.map(r => r.teacher).filter(Boolean))]
+        .filter(name => !hiddenPeople.teacher.includes(name));
+
+    const students = [...new Set(records.map(r => r.student).filter(Boolean))]
+        .filter(name => !hiddenPeople.student.includes(name));
 
     teacherSelect.innerHTML = `
         <option value="">請選擇你的名字</option>
         <option value="__add__">＋ 新增陪課員</option>
+            <option value="__delete__">🗑️ 刪除陪課員</option>
     `;
+    teachers.forEach(name => addOptionIfNotExists(teacherSelect, name, name));
 
-    teacherNames.forEach(name => addOptionIfNotExists(teacherSelect, name, name));
-
-    if(currentTeacher && currentTeacher !== "__add__"){
+    if(currentTeacher && currentTeacher !== "__add__" && !hiddenPeople.teacher.includes(currentTeacher)){
         addOptionIfNotExists(teacherSelect, currentTeacher, currentTeacher);
         teacherSelect.value = currentTeacher;
     }
@@ -939,112 +888,34 @@ function updateSelectOptions(){
     studentSelect.innerHTML = `
         <option value="">請選擇被陪課成員</option>
         <option value="__add__">＋ 新增被陪課成員</option>
+            <option value="__delete__">🗑️ 刪除被陪課成員</option>
     `;
+    students.forEach(name => addOptionIfNotExists(studentSelect, name, name));
 
-    studentNames.forEach(name => addOptionIfNotExists(studentSelect, name, name));
-
-    if(currentStudent && currentStudent !== "__add__"){
+    if(currentStudent && currentStudent !== "__add__" && !hiddenPeople.student.includes(currentStudent)){
         addOptionIfNotExists(studentSelect, currentStudent, currentStudent);
         studentSelect.value = currentStudent;
     }
 
     filterTeacher.innerHTML = `<option value="">全部陪課員</option>`;
-    teacherNames.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
+    teachers.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
 
-    if(currentFilterTeacher){
+    if(currentFilterTeacher && !hiddenPeople.teacher.includes(currentFilterTeacher)){
         addOptionIfNotExists(filterTeacher, currentFilterTeacher, currentFilterTeacher);
         filterTeacher.value = currentFilterTeacher;
     }
 
     filterStudent.innerHTML = `<option value="">全部被陪課成員</option>`;
-    studentNames.forEach(name => addOptionIfNotExists(filterStudent, name, name));
+    students.forEach(name => addOptionIfNotExists(filterStudent, name, name));
 
-    if(currentFilterStudent){
+    if(currentFilterStudent && !hiddenPeople.student.includes(currentFilterStudent)){
         addOptionIfNotExists(filterStudent, currentFilterStudent, currentFilterStudent);
         filterStudent.value = currentFilterStudent;
     }
 }
 
-function syncPeopleFromOldRecords(){
-    records.forEach(r => {
-        if(r.teacher && !teachers.includes(r.teacher)) teachers.push(r.teacher);
-        if(r.student && !students.includes(r.student)) students.push(r.student);
-    });
-}
-
-function renderManageLists(){
-    renderPersonList("teacherManageList", teachers, "teacher");
-    renderPersonList("studentManageList", students, "student");
-}
-
-function renderPersonList(elementId, list, type){
-    const area = document.getElementById(elementId);
-    const uniqueList = [...new Set(list.filter(Boolean))].sort((a,b) => a.localeCompare(b, "zh-Hant"));
-
-    if(uniqueList.length === 0){
-        area.innerHTML = `<div class="empty-msg" style="padding:18px 0;">目前沒有名單</div>`;
-        return;
-    }
-
-    area.innerHTML = uniqueList.map(name => {
-        const safeName = escapeHTML(name);
-        const recordCount = records.filter(r => type === "teacher" ? r.teacher === name : r.student === name).length;
-
-        return `
-            <div class="person-row">
-                <div>
-                    <div class="person-name">${safeName}</div>
-                    <div class="result-count" style="margin:3px 0 0;">相關紀錄：${recordCount} 筆</div>
-                </div>
-                <div class="person-actions">
-                    <button type="button" class="btn-small btn-delete-soft" onclick="deletePerson('${type}', '${encodeURIComponent(name)}', false)">移除名單</button>
-                    <button type="button" class="btn-small btn-delete-hard" onclick="deletePerson('${type}', '${encodeURIComponent(name)}', true)">連紀錄刪除</button>
-                </div>
-            </div>
-        `;
-    }).join("");
-}
-
-async function deletePerson(type, encodedName, deleteRecords){
-    const name = decodeURIComponent(encodedName);
-    const typeLabel = type === "teacher" ? "陪課員" : "被陪課成員";
-    const count = records.filter(r => type === "teacher" ? r.teacher === name : r.student === name).length;
-
-    let message = `確定要從名單移除「${name}」嗎？\n\n舊紀錄會保留，只是不再出現在下拉選單。`;
-
-    if(deleteRecords){
-        message = `危險操作！\n\n確定要刪除${typeLabel}「${name}」，並連同 ${count} 筆相關紀錄一起刪除嗎？`;
-    }
-
-    if(!confirm(message)) return;
-
-    if(type === "teacher"){
-        teachers = teachers.filter(t => t !== name);
-        if(deleteRecords){
-            records = records.filter(r => r.teacher !== name);
-        }
-    }else{
-        students = students.filter(s => s !== name);
-        if(deleteRecords){
-            records = records.filter(r => r.student !== name);
-        }
-    }
-
-    filteredRecords = records;
-    updateSelectOptions();
-    renderDetail();
-    renderManageLists();
-
-    await postToSheets({
-        action: type === "teacher" ? "deleteTeacher" : "deleteStudent",
-        name,
-        deleteRecords
-    });
-}
-
 function addOptionIfNotExists(select, value, text){
     const exists = [...select.options].some(option => option.value === value);
-
     if(!exists){
         const option = document.createElement("option");
         option.value = value;
@@ -1064,7 +935,7 @@ function escapeHTML(str){
 
 function formatClassTime(value){
     if(!value) return "未填寫";
-    return value.replace("T", " ");
+    return String(value).replace("T", " ");
 }
 
 function renderDetail(){
@@ -1101,14 +972,12 @@ function renderDetail(){
     });
 }
 
-// 將各種可能的日期字串／格式統一轉成 yyyy-MM-dd，避免比對失敗
 function normalizeDateStr(value){
     if(!value) return "";
 
     const str = String(value).trim();
-
-    // 已經是 yyyy-MM-dd 開頭，直接取前10碼
     const isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
     if(isoMatch){
         const yyyy = isoMatch[1];
         const mm = isoMatch[2].padStart(2, "0");
@@ -1116,7 +985,6 @@ function normalizeDateStr(value){
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    // 嘗試讓瀏覽器自行解析（例如 2026/6/21 或含時間的字串）
     const parsed = new Date(str);
     if(!isNaN(parsed.getTime())){
         const yyyy = parsed.getFullYear();
@@ -1131,7 +999,6 @@ function normalizeDateStr(value){
 function renderCountChart(){
     const area = document.getElementById("records");
     const countEl = document.getElementById("resultCount");
-
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
     const dates = [];
@@ -1143,7 +1010,6 @@ function renderCountChart(){
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, "0");
         const dd = String(d.getDate()).padStart(2, "0");
-
         dates.push(`${yyyy}-${mm}-${dd}`);
     }
 
@@ -1153,7 +1019,6 @@ function renderCountChart(){
     let unmatchedCount = 0;
 
     filteredRecords.forEach(r => {
-        // 優先用 date 欄位，沒有的話退而用 classTime 的前10碼當備援
         const rawDate = r.date || r.classTime || "";
         const normalized = normalizeDateStr(rawDate);
 
@@ -1170,7 +1035,6 @@ function renderCountChart(){
 
     const totalCount = Object.values(countMap).reduce((a,b) => a+b, 0);
     const maxCount = Math.max(...Object.values(countMap), 1);
-
     countEl.textContent = `區間內共 ${totalCount} 筆紀錄`;
 
     if(totalCount === 0 && filteredRecords.length > 0){
@@ -1215,27 +1079,22 @@ async function syncToSheets(record){
     showSyncMsg("⏳ 同步中...", "ing");
 
     try{
-        await postToSheets({ action:"addRecord", ...record });
+        await fetch(GAS_URL,{
+            method:"POST",
+            mode:"no-cors",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(record)
+        });
         showSyncMsg("✅ 已同步至雲端", "ok");
-    } catch(e){
+    }catch(e){
         showSyncMsg("❌ 同步失敗，請檢查網路後再試一次", "fail");
     }
-}
-
-async function postToSheets(payload){
-    await fetch(GAS_URL,{
-        method:"POST",
-        mode:"no-cors",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify(payload)
-    });
 }
 
 function showSyncMsg(msg,type){
     const el = document.getElementById("syncMsg");
     el.innerHTML = `<div class="sync-status sync-${type}">${msg}</div>`;
 }
-
 </script>
 </body>
 </html>
