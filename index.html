@@ -420,6 +420,74 @@ textarea{
     font-size:13.5px;
 }
 
+
+/* ---------- Manage people ---------- */
+.manage-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.manage-card{
+    background:#fbfcff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+}
+
+.manage-card h3{
+    margin:0 0 10px;
+    font-size:14px;
+}
+
+.person-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+}
+
+.person-row:last-child{border-bottom:none;}
+
+.person-name{
+    font-size:13.5px;
+    font-weight:700;
+}
+
+.person-actions{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+}
+
+.btn-small{
+    border:none;
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.btn-delete-soft{
+    background:var(--ing-bg);
+    color:var(--ing-fg);
+}
+
+.btn-delete-hard{
+    background:var(--fail-bg);
+    color:var(--fail-fg);
+}
+
+.manage-note{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 12px;
+}
+
 /* ---------- Mobile ---------- */
 @media(max-width:640px){
     body{padding:16px 10px 50px;}
@@ -437,6 +505,10 @@ textarea{
 
     .filter-actions{
         flex-direction:column;
+    }
+
+    .manage-grid{
+        grid-template-columns:1fr;
     }
 
     .filter-actions button{
@@ -554,13 +626,13 @@ textarea{
         </div>
         <div class="field" style="margin-bottom:0;">
             <label for="filterTeacher">陪課員</label>
-            <select id="filterTeacher">
+            <select id="filterTeacher" onchange="handleFilterTeacherChange()">
                 <option value="">全部陪課員</option>
             </select>
         </div>
         <div class="field" style="margin-bottom:0;">
             <label for="filterStudent">被陪課成員</label>
-            <select id="filterStudent">
+            <select id="filterStudent" onchange="handleFilterStudentChange()">
                 <option value="">全部被陪課成員</option>
             </select>
         </div>
@@ -575,14 +647,44 @@ textarea{
     <div id="records"></div>
 </div>
 
+
+<!-- 管理名單 -->
+<div class="section">
+    <div class="section-head">
+        <div class="section-badge">⚙️</div>
+        <div>
+            <p class="section-title">管理陪課員與被陪課成員</p>
+            <p class="section-sub">可以只從名單移除，也可以連同相關陪課紀錄一起刪除</p>
+        </div>
+    </div>
+
+    <p class="manage-note">
+        「從名單移除」會保留舊紀錄，只是不再出現在下拉選單。
+        「連紀錄刪除」會把這個人的相關陪課紀錄也一起刪掉。
+    </p>
+
+    <div class="manage-grid">
+        <div class="manage-card">
+            <h3>陪課員名單</h3>
+            <div id="teacherManageList"></div>
+        </div>
+        <div class="manage-card">
+            <h3>被陪課成員名單</h3>
+            <div id="studentManageList"></div>
+        </div>
+    </div>
+</div>
+
 </div>
 
 <script>
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbws0OC2ivLQJli-hAYc8JA5N2dA6Ts4SGLKNZaCLRVR3D_BDa_dUGaeUhipevUf9gdH/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbytO2G46eDADyqxfIjXyhQ2xg1nFj9tBNFoDPvLwt4vCryn_RKJbVfy-mfY_5bcWzEM/exec';
 
 let records = [];
 let filteredRecords = [];
+let teachers = [];
+let students = [];
 let currentViewMode = "detail";
 
 window.onload = async () => {
@@ -602,14 +704,18 @@ function setNowClassTime(){
 
 async function loadFromSheets(){
     try{
-        const res = await fetch(GAS_URL);
+        const res = await fetch(`${GAS_URL}?action=init`);
         const data = await res.json();
 
-        records = Array.isArray(data) ? data : [];
+        records = Array.isArray(data.records) ? data.records : [];
+        teachers = Array.isArray(data.teachers) ? data.teachers.map(p => p.name) : [];
+        students = Array.isArray(data.students) ? data.students.map(p => p.name) : [];
         filteredRecords = records;
 
+        syncPeopleFromOldRecords();
         updateSelectOptions();
         renderDetail();
+        renderManageLists();
     } catch(err){
         showSyncMsg("❌ 無法讀取 Google Sheets", "fail");
     }
@@ -626,7 +732,7 @@ function handleTeacherChange(){
     }
 }
 
-function confirmAddTeacher(){
+async function confirmAddTeacher(){
     const input = document.getElementById("newTeacherName");
     const name = input.value.trim();
 
@@ -635,14 +741,20 @@ function confirmAddTeacher(){
         return;
     }
 
-    const teacherSelect = document.getElementById("teacher");
+    if(!teachers.includes(name)){
+        teachers.push(name);
+    }
 
+    const teacherSelect = document.getElementById("teacher");
     addOptionIfNotExists(teacherSelect, name, name);
     teacherSelect.value = name;
 
     input.value = "";
     document.getElementById("addTeacherBox").style.display = "none";
     updateSelectOptions();
+    renderManageLists();
+
+    await postToSheets({ action:"addTeacher", name });
 }
 
 function cancelAddTeacher(){
@@ -662,7 +774,7 @@ function handleStudentChange(){
     }
 }
 
-function confirmAddStudent(){
+async function confirmAddStudent(){
     const input = document.getElementById("newStudentName");
     const name = input.value.trim();
 
@@ -671,14 +783,20 @@ function confirmAddStudent(){
         return;
     }
 
-    const studentSelect = document.getElementById("student");
+    if(!students.includes(name)){
+        students.push(name);
+    }
 
+    const studentSelect = document.getElementById("student");
     addOptionIfNotExists(studentSelect, name, name);
     studentSelect.value = name;
 
     input.value = "";
     document.getElementById("addStudentBox").style.display = "none";
     updateSelectOptions();
+    renderManageLists();
+
+    await postToSheets({ action:"addStudent", name });
 }
 
 function cancelAddStudent(){
@@ -710,8 +828,12 @@ async function addRecord(){
     records.push(newRecord);
     filteredRecords = records;
 
+    if(!teachers.includes(teacher)) teachers.push(teacher);
+    if(!students.includes(student)) students.push(student);
+
     updateSelectOptions();
     renderDetail();
+    renderManageLists();
 
     await syncToSheets(newRecord);
 
@@ -727,6 +849,20 @@ function setViewMode(mode){
     document.getElementById("btn-count").classList.toggle("active", mode === "count");
 
     applyFilter();
+}
+
+function handleFilterTeacherChange(){
+    const teacher = document.getElementById("filterTeacher").value;
+    if(teacher){
+        document.getElementById("filterStudent").value = "";
+    }
+}
+
+function handleFilterStudentChange(){
+    const student = document.getElementById("filterStudent").value;
+    if(student){
+        document.getElementById("filterTeacher").value = "";
+    }
 }
 
 function applyFilter(){
@@ -785,15 +921,15 @@ function updateSelectOptions(){
     const currentFilterTeacher = filterTeacher.value;
     const currentFilterStudent = filterStudent.value;
 
-    const teachers = [...new Set(records.map(r => r.teacher).filter(Boolean))];
-    const students = [...new Set(records.map(r => r.student).filter(Boolean))];
+    const teacherNames = [...new Set(teachers.filter(Boolean))];
+    const studentNames = [...new Set(students.filter(Boolean))];
 
     teacherSelect.innerHTML = `
         <option value="">請選擇你的名字</option>
         <option value="__add__">＋ 新增陪課員</option>
     `;
 
-    teachers.forEach(name => addOptionIfNotExists(teacherSelect, name, name));
+    teacherNames.forEach(name => addOptionIfNotExists(teacherSelect, name, name));
 
     if(currentTeacher && currentTeacher !== "__add__"){
         addOptionIfNotExists(teacherSelect, currentTeacher, currentTeacher);
@@ -805,7 +941,7 @@ function updateSelectOptions(){
         <option value="__add__">＋ 新增被陪課成員</option>
     `;
 
-    students.forEach(name => addOptionIfNotExists(studentSelect, name, name));
+    studentNames.forEach(name => addOptionIfNotExists(studentSelect, name, name));
 
     if(currentStudent && currentStudent !== "__add__"){
         addOptionIfNotExists(studentSelect, currentStudent, currentStudent);
@@ -813,7 +949,7 @@ function updateSelectOptions(){
     }
 
     filterTeacher.innerHTML = `<option value="">全部陪課員</option>`;
-    teachers.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
+    teacherNames.forEach(name => addOptionIfNotExists(filterTeacher, name, name));
 
     if(currentFilterTeacher){
         addOptionIfNotExists(filterTeacher, currentFilterTeacher, currentFilterTeacher);
@@ -821,12 +957,89 @@ function updateSelectOptions(){
     }
 
     filterStudent.innerHTML = `<option value="">全部被陪課成員</option>`;
-    students.forEach(name => addOptionIfNotExists(filterStudent, name, name));
+    studentNames.forEach(name => addOptionIfNotExists(filterStudent, name, name));
 
     if(currentFilterStudent){
         addOptionIfNotExists(filterStudent, currentFilterStudent, currentFilterStudent);
         filterStudent.value = currentFilterStudent;
     }
+}
+
+function syncPeopleFromOldRecords(){
+    records.forEach(r => {
+        if(r.teacher && !teachers.includes(r.teacher)) teachers.push(r.teacher);
+        if(r.student && !students.includes(r.student)) students.push(r.student);
+    });
+}
+
+function renderManageLists(){
+    renderPersonList("teacherManageList", teachers, "teacher");
+    renderPersonList("studentManageList", students, "student");
+}
+
+function renderPersonList(elementId, list, type){
+    const area = document.getElementById(elementId);
+    const uniqueList = [...new Set(list.filter(Boolean))].sort((a,b) => a.localeCompare(b, "zh-Hant"));
+
+    if(uniqueList.length === 0){
+        area.innerHTML = `<div class="empty-msg" style="padding:18px 0;">目前沒有名單</div>`;
+        return;
+    }
+
+    area.innerHTML = uniqueList.map(name => {
+        const safeName = escapeHTML(name);
+        const recordCount = records.filter(r => type === "teacher" ? r.teacher === name : r.student === name).length;
+
+        return `
+            <div class="person-row">
+                <div>
+                    <div class="person-name">${safeName}</div>
+                    <div class="result-count" style="margin:3px 0 0;">相關紀錄：${recordCount} 筆</div>
+                </div>
+                <div class="person-actions">
+                    <button type="button" class="btn-small btn-delete-soft" onclick="deletePerson('${type}', '${encodeURIComponent(name)}', false)">移除名單</button>
+                    <button type="button" class="btn-small btn-delete-hard" onclick="deletePerson('${type}', '${encodeURIComponent(name)}', true)">連紀錄刪除</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+async function deletePerson(type, encodedName, deleteRecords){
+    const name = decodeURIComponent(encodedName);
+    const typeLabel = type === "teacher" ? "陪課員" : "被陪課成員";
+    const count = records.filter(r => type === "teacher" ? r.teacher === name : r.student === name).length;
+
+    let message = `確定要從名單移除「${name}」嗎？\n\n舊紀錄會保留，只是不再出現在下拉選單。`;
+
+    if(deleteRecords){
+        message = `危險操作！\n\n確定要刪除${typeLabel}「${name}」，並連同 ${count} 筆相關紀錄一起刪除嗎？`;
+    }
+
+    if(!confirm(message)) return;
+
+    if(type === "teacher"){
+        teachers = teachers.filter(t => t !== name);
+        if(deleteRecords){
+            records = records.filter(r => r.teacher !== name);
+        }
+    }else{
+        students = students.filter(s => s !== name);
+        if(deleteRecords){
+            records = records.filter(r => r.student !== name);
+        }
+    }
+
+    filteredRecords = records;
+    updateSelectOptions();
+    renderDetail();
+    renderManageLists();
+
+    await postToSheets({
+        action: type === "teacher" ? "deleteTeacher" : "deleteStudent",
+        name,
+        deleteRecords
+    });
 }
 
 function addOptionIfNotExists(select, value, text){
@@ -1002,17 +1215,20 @@ async function syncToSheets(record){
     showSyncMsg("⏳ 同步中...", "ing");
 
     try{
-        await fetch(GAS_URL,{
-            method:"POST",
-            mode:"no-cors",
-            headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify(record)
-        });
-
+        await postToSheets({ action:"addRecord", ...record });
         showSyncMsg("✅ 已同步至雲端", "ok");
     } catch(e){
         showSyncMsg("❌ 同步失敗，請檢查網路後再試一次", "fail");
     }
+}
+
+async function postToSheets(payload){
+    await fetch(GAS_URL,{
+        method:"POST",
+        mode:"no-cors",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(payload)
+    });
 }
 
 function showSyncMsg(msg,type){
